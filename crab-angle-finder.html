@@ -1,0 +1,663 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Crab-Angle Finder</title>
+<style>
+  :root{
+    --bg:#f3f4f2;
+    --surface:#ffffff;
+    --surface-2:#eceeec;
+    --border:#d7dbd6;
+    --text:#161a17;
+    --text-dim:#5c655e;
+    --accent:#c4681f;
+    --accent-ink:#ffffff;
+    --axis-x:#c4681f;
+    --axis-y:#2c7a6b;
+    --robot:#2c5aa3;
+    --grid:#dfe3dd;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12140f;
+      --surface:#1a1d16;
+      --surface-2:#20241b;
+      --border:#33392b;
+      --text:#eef0e8;
+      --text-dim:#9aa295;
+      --accent:#e8964a;
+      --accent-ink:#141405;
+      --axis-x:#e8964a;
+      --axis-y:#5fc2ae;
+      --robot:#7fa8e8;
+      --grid:#262a20;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12140f;
+    --surface:#1a1d16;
+    --surface-2:#20241b;
+    --border:#33392b;
+    --text:#eef0e8;
+    --text-dim:#9aa295;
+    --accent:#e8964a;
+    --accent-ink:#141405;
+    --axis-x:#e8964a;
+    --axis-y:#5fc2ae;
+    --robot:#7fa8e8;
+    --grid:#262a20;
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    padding-inline:16px;
+    padding-block:28px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{width:100%;max-width:980px;display:flex;flex-direction:column;gap:20px;}
+
+  h1{
+    font-family:"Rajdhani", "IBM Plex Sans", sans-serif;
+    font-weight:700;
+    letter-spacing:.01em;
+    font-size:clamp(28px,4vw,38px);
+    margin:0;
+    text-wrap:balance;
+  }
+  .tagline{color:var(--text-dim);font-size:14px;margin-top:4px;max-width:60ch;}
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:760px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  label.field-label{
+    display:block;
+    font-family:"Rajdhani",sans-serif;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+  }
+
+  textarea{
+    width:100%;
+    resize:vertical;
+    min-height:52px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-size:13px;
+    padding:10px 12px;
+    line-height:1.5;
+  }
+  textarea:focus, button:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+
+  .point-row{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+  .point-row:last-child{margin-bottom:0;}
+  .parsed{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:12px;
+    color:var(--text-dim);
+    min-height:16px;
+  }
+  .parsed.err{color:#c14b3d;}
+  .parsed b{color:var(--text);font-weight:600;}
+
+  .facing-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:4px;}
+  .dirbtn{
+    font-family:"Rajdhani",sans-serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.04em;
+    padding:8px 14px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+    cursor:pointer;
+  }
+  .dirbtn.active{
+    background:var(--accent);
+    color:var(--accent-ink);
+    border-color:var(--accent);
+  }
+  .custom-angle{display:flex;align-items:center;gap:6px;margin-left:4px;}
+  .custom-angle input{
+    width:72px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:13px;
+    padding:7px 8px;
+  }
+  .custom-angle span{font-size:12px;color:var(--text-dim);}
+
+  .results{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin-top:16px;
+  }
+  @media (max-width:520px){ .results{grid-template-columns:1fr;} }
+
+  .stat{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+  }
+  .stat .k{
+    font-family:"Rajdhani",sans-serif;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .stat .v{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:15px;
+    margin-top:2px;
+  }
+
+  .headline-stat{
+    grid-column:1 / -1;
+    background:var(--surface-2);
+    border:1px solid var(--accent);
+    border-radius:10px;
+    padding:16px 18px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px 20px;
+  }
+  .headline-stat .k{
+    font-family:"Rajdhani",sans-serif;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .headline-stat .v{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:34px;
+    font-weight:600;
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+  }
+  .headline-stat .alt{
+    font-size:13px;
+    color:var(--text-dim);
+    font-family:"IBM Plex Mono",monospace;
+  }
+
+  .diagram-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+  svg{width:100%;height:auto;max-width:420px;}
+  svg text{font-family:"IBM Plex Mono",monospace;}
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    font-size:12px;
+    color:var(--text-dim);
+    justify-content:center;
+  }
+  .legend .dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+
+  .note{
+    font-size:12px;
+    color:var(--text-dim);
+    line-height:1.6;
+    margin-top:14px;
+    border-top:1px solid var(--border);
+    padding-top:12px;
+  }
+  .note code{
+    font-family:"IBM Plex Mono",monospace;
+    background:var(--surface-2);
+    padding:1px 5px;
+    border-radius:4px;
+  }
+
+  .hub-back{
+    position:fixed;
+    top:calc(14px + env(safe-area-inset-top, 0px));
+    left:14px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:"Rajdhani",sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.03em;
+    color:var(--text-dim);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:7px 14px 7px 12px;
+    text-decoration:none;
+    z-index:10;
+  }
+  .hub-back:hover{color:var(--accent);border-color:var(--accent);}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<a class="hub-back" href="index.html">&larr; Hub</a>
+<div class="wrap">
+  <div>
+    <h1>Crab-Angle Finder</h1>
+    <p class="tagline">Paste two field points, pick the direction the robot should face, and get the crab-drive angle (0&deg; = forward, 180&deg; = backward) needed to move from A to B while holding that heading.</p>
+  </div>
+
+  <div class="panel">
+    <div class="grid">
+      <div>
+        <div class="point-row">
+          <label class="field-label" for="pointA">Point A (start)</label>
+          <textarea id="pointA" spellcheck="false"></textarea>
+          <div class="parsed" id="parsedA"></div>
+        </div>
+        <div class="point-row">
+          <label class="field-label" for="pointB">Point B (end)</label>
+          <textarea id="pointB" spellcheck="false"></textarea>
+          <div class="parsed" id="parsedB"></div>
+        </div>
+        <p class="tagline" style="margin-top:2px;">Tip: paste <code style="font-family:'IBM Plex Mono',monospace;">A -&gt; B</code> into Point A and Point B fills itself.</p>
+      </div>
+
+      <div>
+        <label class="field-label">Robot facing (world heading while it drives)</label>
+        <div class="facing-row" id="dirButtons">
+          <button class="dirbtn" data-deg="90">North</button>
+          <button class="dirbtn" data-deg="0">East</button>
+          <button class="dirbtn" data-deg="-90">South</button>
+          <button class="dirbtn" data-deg="180">West</button>
+          <div class="custom-angle">
+            <span>custom</span>
+            <input type="number" id="customDeg" step="1" placeholder="deg">
+            <span>&deg;</span>
+          </div>
+        </div>
+        <p class="tagline" style="margin-top:10px;">World frame: +X = East (0&deg;), +Y = North (90&deg;), CCW positive &mdash; matches WPILib field coordinates.</p>
+
+        <div class="results">
+          <div class="headline-stat">
+            <div>
+              <div class="k">Crab-drive angle</div>
+              <div class="v" id="primaryAngle">&mdash;</div>
+            </div>
+            <div class="alt" id="altAngle"></div>
+          </div>
+          <div class="stat">
+            <div class="k">&Delta;X / &Delta;Y</div>
+            <div class="v" id="deltas">&mdash;</div>
+          </div>
+          <div class="stat">
+            <div class="k">Distance</div>
+            <div class="v" id="distance">&mdash;</div>
+          </div>
+          <div class="stat">
+            <div class="k">Travel bearing (world)</div>
+            <div class="v" id="bearing">&mdash;</div>
+          </div>
+          <div class="stat">
+            <div class="k">Robot heading (world)</div>
+            <div class="v" id="headingOut">&mdash;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel diagram-wrap">
+    <svg viewBox="0 0 440 440" id="diagram" role="img" aria-label="Diagram of travel direction versus robot heading"></svg>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--axis-x);"></span>World +X (East)</span>
+      <span><span class="dot" style="background:var(--axis-y);"></span>World +Y (North)</span>
+      <span><span class="dot" style="background:var(--accent);"></span>Travel A&rarr;B</span>
+      <span><span class="dot" style="background:var(--robot);"></span>Robot forward (chosen facing)</span>
+    </div>
+    <p class="note" style="border-top:none;padding-top:0;text-align:center;max-width:60ch;">
+      Vector directions are exact; lengths are normalized for readability, not drawn to field scale.
+    </p>
+  </div>
+
+  <div class="panel">
+    <p class="note" style="margin-top:0;border-top:none;padding-top:0;">
+      <b style="color:var(--text);">How it's computed:</b> travel bearing = atan2(&Delta;Y, &Delta;X) in the world frame above. The crab-drive angle is the robot's chosen heading minus that bearing, normalized to &minus;180&deg;&hellip;180&deg;. Because &minus;180&deg; and 180&deg; describe the same physical direction, an equivalent unwrapped value (&plusmn;360&deg;) is shown next to the primary result &mdash; use whichever range your drive code expects. Example: <code>Main-Main-1013 (33.359, 86.024) &rarr; Main-Main-1020 (35.486, 87.542)</code> facing South gives <b style="color:var(--text);">&minus;126&deg;</b>.
+    </p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const pointAEl = document.getElementById('pointA');
+  const pointBEl = document.getElementById('pointB');
+  const parsedAEl = document.getElementById('parsedA');
+  const parsedBEl = document.getElementById('parsedB');
+  const dirButtons = document.querySelectorAll('.dirbtn');
+  const customDegEl = document.getElementById('customDeg');
+
+  const primaryAngleEl = document.getElementById('primaryAngle');
+  const altAngleEl = document.getElementById('altAngle');
+  const deltasEl = document.getElementById('deltas');
+  const distanceEl = document.getElementById('distance');
+  const bearingEl = document.getElementById('bearing');
+  const headingOutEl = document.getElementById('headingOut');
+  const svg = document.getElementById('diagram');
+
+  let heading = -90; // default: South
+
+  function parsePoint(raw){
+    if(!raw) return null;
+    const uuidM = raw.match(/UUID:\s*([^\s,}]+)/i);
+    const xM = raw.match(/x:\s*(-?[0-9]*\.?[0-9]+)/i);
+    const yM = raw.match(/y:\s*(-?[0-9]*\.?[0-9]+)/i);
+    if(!xM || !yM) return null;
+    return {
+      uuid: uuidM ? uuidM[1].replace(/[,}]+$/,'') : '',
+      x: parseFloat(xM[1]),
+      y: parseFloat(yM[1])
+    };
+  }
+
+  function norm180(a){
+    return ((a + 180) % 360 + 360) % 360 - 180;
+  }
+
+  function fmt(n, d){
+    if(typeof d === 'undefined') d = 2;
+    return n.toFixed(d);
+  }
+
+  function setHeadingButtonsUI(){
+    dirButtons.forEach(b=>{
+      b.classList.toggle('active', parseFloat(b.dataset.deg) === heading && customDegEl.value === '');
+    });
+  }
+
+  function svgns(tag){ return document.createElementNS('http://www.w3.org/2000/svg', tag); }
+
+  function drawDiagram(bearingDeg, headingDeg, hasData){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const cx = 220, cy = 220, r = 150;
+    const styleVars = getComputedStyle(document.documentElement);
+    const axisX = styleVars.getPropertyValue('--axis-x').trim() || '#c4681f';
+    const axisY = styleVars.getPropertyValue('--axis-y').trim() || '#2c7a6b';
+    const accent = styleVars.getPropertyValue('--accent').trim() || '#c4681f';
+    const robot = styleVars.getPropertyValue('--robot').trim() || '#2c5aa3';
+    const grid = styleVars.getPropertyValue('--grid').trim() || '#dfe3dd';
+    const textDim = styleVars.getPropertyValue('--text-dim').trim() || '#5c655e';
+    const textCol = styleVars.getPropertyValue('--text').trim() || '#161a17';
+
+    function toXY(deg, radius){
+      const rad = deg * Math.PI / 180;
+      return { x: cx + radius * Math.cos(rad), y: cy - radius * Math.sin(rad) };
+    }
+
+    // defs: arrow markers
+    const defs = svgns('defs');
+    [['arrowAxisX',axisX],['arrowAxisY',axisY],['arrowTravel',accent],['arrowRobot',robot]].forEach(([id,color])=>{
+      const marker = svgns('marker');
+      marker.setAttribute('id', id);
+      marker.setAttribute('markerWidth','10');
+      marker.setAttribute('markerHeight','10');
+      marker.setAttribute('refX','6');
+      marker.setAttribute('refY','3');
+      marker.setAttribute('orient','auto');
+      const path = svgns('path');
+      path.setAttribute('d','M0,0 L6,3 L0,6 Z');
+      path.setAttribute('fill', color);
+      marker.appendChild(path);
+      defs.appendChild(marker);
+    });
+    svg.appendChild(defs);
+
+    // faint compass circle
+    const circle = svgns('circle');
+    circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r+30);
+    circle.setAttribute('fill','none'); circle.setAttribute('stroke', grid); circle.setAttribute('stroke-width','1');
+    svg.appendChild(circle);
+
+    [['N',90],['E',0],['S',-90],['W',180]].forEach(([label,deg])=>{
+      const p = toXY(deg, r+42);
+      const t = svgns('text');
+      t.setAttribute('x', p.x); t.setAttribute('y', p.y+4);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size','12');
+      t.setAttribute('fill', textDim);
+      t.textContent = label;
+      svg.appendChild(t);
+    });
+
+    // world axes
+    function axisLine(deg, color, label){
+      const p1 = toXY(deg, r+18), p2 = toXY(deg+180, 24);
+      const line = svgns('line');
+      line.setAttribute('x1', p2.x); line.setAttribute('y1', p2.y);
+      line.setAttribute('x2', p1.x); line.setAttribute('y2', p1.y);
+      line.setAttribute('stroke', color);
+      line.setAttribute('stroke-width','1.5');
+      line.setAttribute('stroke-dasharray','4 4');
+      line.setAttribute('marker-end', 'url(#'+ (deg===0?'arrowAxisX':'arrowAxisY') +')');
+      svg.appendChild(line);
+      const lp = toXY(deg, r+30);
+      const t = svgns('text');
+      t.setAttribute('x', lp.x); t.setAttribute('y', lp.y+4);
+      t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size','11');
+      t.setAttribute('fill', color);
+      t.textContent = label;
+      svg.appendChild(t);
+    }
+    axisLine(0, axisX, '+X');
+    axisLine(90, axisY, '+Y');
+
+    // center point (A)
+    const center = svgns('circle');
+    center.setAttribute('cx', cx); center.setAttribute('cy', cy); center.setAttribute('r', 4);
+    center.setAttribute('fill', textCol);
+    svg.appendChild(center);
+    const aLabel = svgns('text');
+    aLabel.setAttribute('x', cx-10); aLabel.setAttribute('y', cy-10);
+    aLabel.setAttribute('font-size','12'); aLabel.setAttribute('fill', textCol);
+    aLabel.setAttribute('text-anchor','end');
+    aLabel.textContent = 'A';
+    svg.appendChild(aLabel);
+
+    if(!hasData) return;
+
+    // robot forward vector
+    const robotLen = 108;
+    const rp = toXY(headingDeg, robotLen);
+    const rLine = svgns('line');
+    rLine.setAttribute('x1', cx); rLine.setAttribute('y1', cy);
+    rLine.setAttribute('x2', rp.x); rLine.setAttribute('y2', rp.y);
+    rLine.setAttribute('stroke', robot);
+    rLine.setAttribute('stroke-width','4');
+    rLine.setAttribute('marker-end','url(#arrowRobot)');
+    svg.appendChild(rLine);
+    const rLabel = svgns('text');
+    const rlp = toXY(headingDeg, robotLen+18);
+    rLabel.setAttribute('x', rlp.x); rLabel.setAttribute('y', rlp.y+4);
+    rLabel.setAttribute('font-size','12'); rLabel.setAttribute('fill', robot);
+    rLabel.setAttribute('font-weight','600');
+    rLabel.setAttribute('text-anchor','middle');
+    rLabel.textContent = 'forward';
+    svg.appendChild(rLabel);
+
+    // travel vector
+    const travelLen = 138;
+    const tp = toXY(bearingDeg, travelLen);
+    const tLine = svgns('line');
+    tLine.setAttribute('x1', cx); tLine.setAttribute('y1', cy);
+    tLine.setAttribute('x2', tp.x); tLine.setAttribute('y2', tp.y);
+    tLine.setAttribute('stroke', accent);
+    tLine.setAttribute('stroke-width','4');
+    tLine.setAttribute('marker-end','url(#arrowTravel)');
+    svg.appendChild(tLine);
+    const bLabel = svgns('text');
+    const blp = toXY(bearingDeg, travelLen+18);
+    bLabel.setAttribute('x', blp.x); bLabel.setAttribute('y', blp.y+4);
+    bLabel.setAttribute('font-size','12'); bLabel.setAttribute('fill', accent);
+    bLabel.setAttribute('font-weight','600');
+    bLabel.setAttribute('text-anchor','middle');
+    bLabel.textContent = 'B';
+    svg.appendChild(bLabel);
+
+    // arc between forward and travel vectors
+    const arcR = 46;
+    const p1 = toXY(headingDeg, arcR);
+    const p2 = toXY(bearingDeg, arcR);
+    let sweepDeg = bearingDeg - headingDeg;
+    sweepDeg = norm180(sweepDeg);
+    const largeArc = Math.abs(sweepDeg) > 180 ? 1 : 0;
+    const sweepFlag = sweepDeg < 0 ? 1 : 0; // svg y flipped, so ccw math negative maps to sweep 1
+    const arcPath = svgns('path');
+    arcPath.setAttribute('d', 'M '+p1.x+' '+p1.y+' A '+arcR+' '+arcR+' 0 '+largeArc+' '+sweepFlag+' '+p2.x+' '+p2.y);
+    arcPath.setAttribute('fill','none');
+    arcPath.setAttribute('stroke', textCol);
+    arcPath.setAttribute('stroke-width','1.5');
+    arcPath.setAttribute('opacity','0.55');
+    svg.appendChild(arcPath);
+
+    const midDeg = headingDeg + sweepDeg/2;
+    const midP = toXY(midDeg, arcR+24);
+    const angleLabel = svgns('text');
+    angleLabel.setAttribute('x', midP.x); angleLabel.setAttribute('y', midP.y+4);
+    angleLabel.setAttribute('font-size','13'); angleLabel.setAttribute('font-weight','600');
+    angleLabel.setAttribute('fill', textCol);
+    angleLabel.setAttribute('text-anchor','middle');
+    angleLabel.textContent = Math.round(sweepDeg*-1) + '\u00b0';
+    svg.appendChild(angleLabel);
+  }
+
+  function compute(){
+    const a = parsePoint(pointAEl.value);
+    const b = parsePoint(pointBEl.value);
+
+    parsedAEl.classList.remove('err');
+    parsedBEl.classList.remove('err');
+
+    if(a){
+      parsedAEl.innerHTML = (a.uuid? '<b>'+a.uuid+'</b> &middot; ':'') + 'x='+fmt(a.x)+', y='+fmt(a.y);
+    } else {
+      parsedAEl.textContent = pointAEl.value.trim() ? 'Could not parse x/y from this text.' : '';
+      if(pointAEl.value.trim()) parsedAEl.classList.add('err');
+    }
+    if(b){
+      parsedBEl.innerHTML = (b.uuid? '<b>'+b.uuid+'</b> &middot; ':'') + 'x='+fmt(b.x)+', y='+fmt(b.y);
+    } else {
+      parsedBEl.textContent = pointBEl.value.trim() ? 'Could not parse x/y from this text.' : '';
+      if(pointBEl.value.trim()) parsedBEl.classList.add('err');
+    }
+
+    headingOutEl.textContent = fmt(heading,0) + '\u00b0';
+
+    if(!a || !b){
+      primaryAngleEl.textContent = '\u2014';
+      altAngleEl.textContent = '';
+      deltasEl.textContent = '\u2014';
+      distanceEl.textContent = '\u2014';
+      bearingEl.textContent = '\u2014';
+      drawDiagram(0, heading, false);
+      return;
+    }
+
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const dist = Math.hypot(dx, dy);
+    const bearing = Math.atan2(dy, dx) * 180 / Math.PI;
+    const raw = heading - bearing;
+    const primary = norm180(raw);
+    const alt = primary > 0 ? primary - 360 : primary + 360;
+
+    deltasEl.textContent = (dx>=0?'+':'') + fmt(dx) + '  /  ' + (dy>=0?'+':'') + fmt(dy);
+    distanceEl.textContent = fmt(dist);
+    bearingEl.textContent = fmt(bearing,1) + '\u00b0';
+    primaryAngleEl.textContent = (primary>0?'+':'') + Math.round(primary) + '\u00b0';
+    altAngleEl.textContent = 'equivalent: ' + (alt>0?'+':'') + Math.round(alt) + '\u00b0';
+
+    drawDiagram(bearing, heading, true);
+  }
+
+  dirButtons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      heading = parseFloat(btn.dataset.deg);
+      customDegEl.value = '';
+      setHeadingButtonsUI();
+      compute();
+    });
+  });
+
+  customDegEl.addEventListener('input', ()=>{
+    if(customDegEl.value === ''){ return; }
+    const v = parseFloat(customDegEl.value);
+    if(!isNaN(v)){
+      heading = norm180(v);
+      setHeadingButtonsUI();
+      compute();
+    }
+  });
+
+  function handlePointInput(e, other){
+    const val = e.target.value;
+    if(val.indexOf('->') !== -1 || val.indexOf('\u2192') !== -1){
+      const parts = val.split(/->|\u2192/);
+      if(parts.length >= 2 && other.value.trim() === ''){
+        e.target.value = parts[0].trim();
+        other.value = parts[1].trim();
+      }
+    }
+    compute();
+  }
+
+  pointAEl.addEventListener('input', (e)=> handlePointInput(e, pointBEl));
+  pointBEl.addEventListener('input', (e)=> handlePointInput(e, pointAEl));
+
+  window.addEventListener('DOMContentLoaded', ()=>{});
+
+  // boot with the user's own example so the tool opens already working
+  pointAEl.value = '{UUID: Main-Main-1013,x: 33.359,y: 86.024}';
+  pointBEl.value = '{UUID: Main-Main-1020,x: 35.486,y: 87.542}';
+  setHeadingButtonsUI();
+  compute();
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,329 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Rack Clearance Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: inputs column on the left, live plan view and tolerance budget on the right; stacks on phones. */
+:root {
+  --bg: #f3f4f2;
+  --panel: #ffffff;
+  --fg: #1b1f1d;
+  --muted: #5d6762;
+  --line: #d7dbd7;
+  --accent: #d9480f;
+  --load: #1f6fcf;
+  --rack: #3b4440;
+  --ok: #1f7a46;
+  --bad: #c4261d;
+  --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131715; --panel: #1b201e; --fg: #e8ece9; --muted: #98a39d; --line: #333a37;
+    --accent: #ff7a45; --load: #5aa2ff; --rack: #9aa6a0; --ok: #4cc287; --bad: #ff6b60;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131715; --panel: #1b201e; --fg: #e8ece9; --muted: #98a39d; --line: #333a37;
+  --accent: #ff7a45; --load: #5aa2ff; --rack: #9aa6a0; --ok: #4cc287; --bad: #ff6b60;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.45; padding-inline: 16px; padding-block: 20px 40px; }
+.wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 60ch; }
+.grid { display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 0; }
+fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.row { display: grid; grid-template-columns: 1fr 104px; gap: 4px 10px; align-items: center; }
+.row label { font-weight: 500; }
+.row small { grid-column: 1 / -1; color: var(--muted); font-size: 12px; margin-top: -2px; }
+.inp { display: flex; align-items: center; gap: 6px; }
+input[type=number], select { width: 100%; font: 500 14px var(--font-mono); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; text-align: right; }
+select { text-align: left; font-family: var(--font-body); }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.u { font: 12px var(--font-mono); color: var(--muted); min-width: 22px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button { font: 600 12px var(--font-mono); padding: 5px 12px; background: var(--bg); color: var(--muted); border: 0; cursor: pointer; }
+.seg button[aria-pressed=true] { background: var(--fg); color: var(--bg); }
+.check { display: flex; gap: 8px; align-items: flex-start; }
+.check input { margin-top: 3px; accent-color: var(--accent); }
+.check span small { display: block; color: var(--muted); font-size: 12px; }
+.result { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: flex-end; justify-content: space-between; }
+.big { font: 700 40px/1 var(--font-mono); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.big span { font-size: 16px; color: var(--muted); font-weight: 500; }
+.lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 600; }
+.pill { font: 600 12px var(--font-mono); padding: 4px 10px; border-radius: 99px; border: 1px solid currentColor; }
+.pill.ok { color: var(--ok); } .pill.bad { color: var(--bad); } .pill.na { color: var(--muted); }
+.drawing { border: 1px solid var(--line); border-radius: 4px; background: var(--bg); }
+svg { display: block; width: 100%; height: auto; max-height: 520px; }
+svg text { font-family: var(--font-mono); fill: var(--fg); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+td.n, th.n { text-align: right; font-family: var(--font-mono); }
+tr.total td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--fg); }
+td small { color: var(--muted); }
+.note { color: var(--muted); font-size: 12px; margin: 0; }
+.hub-back{
+  position: fixed; top: 14px; right: 14px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-body); font-weight: 600; font-size: 12.5px;
+  color: var(--muted); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 14px 7px 12px; text-decoration: none; z-index: 10;
+}
+.hub-back:hover{ color: var(--accent); border-color: var(--accent); }
+</style>
+
+<a class="hub-back" href="index.html">&larr; Hub</a>
+<div class="wrap">
+  <header>
+    <h1>Rack Clearance Calculator</h1>
+    <p>How wide the rack opening has to be for a load carried by an AMR, given robot, load and rack tolerances. The load is assumed centered on the robot.</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel" id="inputs">
+      <div class="row" style="grid-template-columns:1fr auto">
+        <h2>Units for lengths</h2>
+        <div class="seg" role="group" aria-label="Length units">
+          <button type="button" id="u_mm" aria-pressed="true">mm</button>
+          <button type="button" id="u_in" aria-pressed="false">in</button>
+        </div>
+      </div>
+
+      <fieldset>
+        <h2>Container</h2>
+        <div class="row"><label for="f_W">Width</label><div class="inp"><input type="number" id="f_W" step="any" min="0"><span class="u"></span></div></div>
+        <div class="row"><label for="f_L">Length</label><div class="inp"><input type="number" id="f_L" step="any" min="0"><span class="u"></span></div></div>
+        <div class="row">
+          <label for="across">Opening spans the</label>
+          <select id="across"><option value="W">width</option><option value="L">length</option></select>
+          <small>The side of the container that faces the two rack uprights. The other side runs along the direction of travel.</small>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <h2>Robot (each side, ±)</h2>
+        <div class="row"><label for="f_pos">Position error</label><div class="inp"><input type="number" id="f_pos" step="any" min="0"><span class="u"></span></div></div>
+        <div class="row"><label for="head">Heading error</label><div class="inp"><input type="number" id="head" step="any" min="0"><span class="u">deg</span></div></div>
+        <div class="row"><label for="f_drift">Approach drift</label><div class="inp"><input type="number" id="f_drift" step="any" min="0"><span class="u"></span></div>
+          <small>Extra sideways error from dead-reckoning before the robot re-locks on the rack. Leave 0 if docking is closed-loop.</small></div>
+        <label class="check"><input type="checkbox" id="r2r"><span>Robot-to-robot<small>Doubles robot position and heading, for a rack taught on one robot and used by another.</small></span></label>
+      </fieldset>
+
+      <fieldset>
+        <h2>Load on robot (±)</h2>
+        <div class="row"><label for="f_load">Sideways placement</label><div class="inp"><input type="number" id="f_load" step="any" min="0"><span class="u"></span></div>
+          <small>How far the container can sit off-center on the robot.</small></div>
+        <div class="row"><label for="loadRot">Rotation on robot</label><div class="inp"><input type="number" id="loadRot" step="any" min="0"><span class="u">deg</span></div></div>
+      </fieldset>
+
+      <fieldset>
+        <h2>Rack</h2>
+        <div class="row"><label for="f_rack">Placement error (±)</label><div class="inp"><input type="number" id="f_rack" step="any" min="0"><span class="u"></span></div></div>
+        <div class="row"><label for="f_margin">Safety margin, each side</label><div class="inp"><input type="number" id="f_margin" step="any" min="0"><span class="u"></span></div></div>
+        <div class="row"><label for="f_opening">Actual opening (to check)</label><div class="inp"><input type="number" id="f_opening" step="any" min="0"><span class="u"></span></div>
+          <small>Example value. Clear the field to hide the pass/fail check.</small></div>
+      </fieldset>
+    </div>
+
+    <div class="panel">
+      <div class="result">
+        <div><div class="lbl">Minimum rack opening</div><div class="big" id="needBig"></div></div>
+        <div><div class="lbl">Clearance needed per side</div><div class="big" id="sideBig" style="font-size:28px"></div></div>
+        <div id="verdict"></div>
+      </div>
+
+      <div class="drawing"><svg id="plan" viewBox="0 0 1000 600" role="img" aria-label="Top-down view of the container entering the rack opening at worst-case tolerance"></svg></div>
+      <div class="legend">
+        <span><i style="border-color:var(--rack)"></i>Rack uprights at required opening</span>
+        <span><i style="border-color:var(--load);border-top-style:dashed"></i>Container, nominal</span>
+        <span><i style="border-color:var(--accent)"></i>Container, worst case (pushed right)</span>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Clearance term, each side</th><th class="n">Worst case</th><th class="n">Statistical (RSS)</th></tr></thead>
+          <tbody id="budget"></tbody>
+        </table>
+      </div>
+      <p class="note" id="formula"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var MM_PER_IN = 25.4;
+  var S = { unit: 'mm', W: 106 * MM_PER_IN, L: 2200, opening: 2850, pos: 10, drift: 0, load: 10, rack: 5, margin: 15,
+            head: 1, loadRot: 0.5, across: 'W', r2r: false };
+  var lenKeys = ['W', 'L', 'opening', 'pos', 'drift', 'load', 'rack', 'margin'];
+  var $ = function (id) { return document.getElementById(id); };
+
+  function toUnit(mm) { return S.unit === 'in' ? mm / MM_PER_IN : mm; }
+  function fromUnit(v) { return S.unit === 'in' ? v * MM_PER_IN : v; }
+  function fmtVal(mm) { // value only, in the active unit
+    var v = toUnit(mm);
+    return S.unit === 'in' ? v.toFixed(2) : v.toFixed(1);
+  }
+  function fmtBoth(mm) { // primary unit with the other in brackets
+    var a = S.unit === 'in' ? (mm / MM_PER_IN).toFixed(2) + ' in' : mm.toFixed(1) + ' mm';
+    var b = S.unit === 'in' ? mm.toFixed(0) + ' mm' : (mm / MM_PER_IN).toFixed(2) + ' in';
+    return a + ' (' + b + ')';
+  }
+  function writeInputs() {
+    lenKeys.forEach(function (k) {
+      var el = $('f_' + k);
+      if (document.activeElement !== el) el.value = (k === 'opening' && S.opening === null) ? '' : fmtVal(S[k]);
+    });
+    ['head', 'loadRot'].forEach(function (k) { if (document.activeElement !== $(k)) $(k).value = S[k]; });
+    $('across').value = S.across;
+    $('r2r').checked = S.r2r;
+    document.querySelectorAll('.u').forEach(function (u) { if (!u.textContent.trim() || u.textContent === 'mm' || u.textContent === 'in') u.textContent = S.unit; });
+    $('u_mm').setAttribute('aria-pressed', S.unit === 'mm');
+    $('u_in').setAttribute('aria-pressed', S.unit === 'in');
+  }
+
+  function calc() {
+    var A = S.across === 'W' ? S.W : S.L;      // dimension across the opening
+    var B = S.across === 'W' ? S.L : S.W;      // dimension along travel
+    var mult = S.r2r ? 2 : 1;
+    var phiDeg = S.head * mult + S.loadRot;
+    var phi = phiDeg * Math.PI / 180;
+    var swept = A * Math.cos(phi) + B * Math.sin(phi);
+    var headSide = Math.max(0, (swept - A) / 2);
+    var pos = S.pos * mult;
+    var terms = [
+      { name: 'Heading swing', note: phiDeg.toFixed(2) + '° total on a ' + fmtVal(B) + ' ' + S.unit + ' run', v: headSide, rss: headSide },
+      { name: 'Robot position', note: S.r2r ? '2 × ' + fmtVal(S.pos) : '', v: pos, rss: pos },
+      { name: 'Approach drift', note: '', v: S.drift, rss: S.drift },
+      { name: 'Load placement', note: '', v: S.load, rss: S.load },
+      { name: 'Rack placement', note: '', v: S.rack, rss: S.rack }
+    ];
+    var sum = 0, sq = 0;
+    terms.forEach(function (t) { sum += t.v; sq += t.rss * t.rss; });
+    var rss = Math.sqrt(sq);
+    return { A: A, B: B, phiDeg: phiDeg, phi: phi, swept: swept, headSide: headSide, terms: terms,
+             sideWorst: sum + S.margin, sideRss: rss + S.margin, lat: sum - headSide,
+             needWorst: A + 2 * (sum + S.margin), needRss: A + 2 * (rss + S.margin) };
+  }
+
+  function drawPlan(c) {
+    var need = c.needWorst, A = c.A, B = c.B;
+    var wall = Math.max(120, need * 0.05);
+    var pad = need * 0.12;
+    var vbW = need + 2 * wall + 2 * pad;
+    var vbH = B + 0.5 * B * 0 + 2 * pad + Math.max(200, B * 0.25);
+    var cx = vbW / 2, cy = vbH / 2 + 0;
+    var fs = vbW / 52;
+    var halfO = need / 2;
+    var shift = c.lat;                                  // worst-case sideways shift, pushed right
+    var o = '';
+    function line(x1, y1, x2, y2, st, extra) { return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + st + '" stroke-width="' + (fs * 0.09) + '" ' + (extra || '') + '/>'; }
+    function text(x, y, s, anchor, color, size) { return '<text x="' + x + '" y="' + y + '" font-size="' + (size || fs) + '" text-anchor="' + (anchor || 'middle') + '"' + (color ? ' style="fill:' + color + '"' : '') + '>' + s + '</text>'; }
+
+    var top = pad * 0.6, bot = vbH - pad * 0.6;
+    // rack uprights
+    o += '<rect x="' + (cx - halfO - wall) + '" y="' + top + '" width="' + wall + '" height="' + (bot - top) + '" fill="var(--rack)" opacity="0.85"/>';
+    o += '<rect x="' + (cx + halfO) + '" y="' + top + '" width="' + wall + '" height="' + (bot - top) + '" fill="var(--rack)" opacity="0.85"/>';
+    // nominal container
+    o += '<rect x="' + (cx - A / 2) + '" y="' + (cy - B / 2) + '" width="' + A + '" height="' + B + '" fill="none" stroke="var(--load)" stroke-width="' + (fs * 0.12) + '" stroke-dasharray="' + (fs * 0.6) + ' ' + (fs * 0.4) + '"/>';
+    // worst-case container
+    o += '<g transform="translate(' + (cx + shift) + ' ' + cy + ') rotate(' + c.phiDeg + ')"><rect x="' + (-A / 2) + '" y="' + (-B / 2) + '" width="' + A + '" height="' + B + '" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="' + (fs * 0.14) + '"/></g>';
+    // swept extents
+    var xr = cx + shift + c.swept / 2, xl = cx + shift - c.swept / 2;
+    o += line(xr, cy - B / 2 - fs * 2.2, xr, cy + B / 2 + fs * 2.2, 'var(--accent)', 'stroke-dasharray="' + fs * 0.4 + ' ' + fs * 0.4 + '"');
+    // clearance dimension on the right (worst side)
+    var gapR = (cx + halfO) - xr;
+    var dy = cy + B / 2 + fs * 3.4;
+    o += line(xr, dy, cx + halfO, dy, gapR >= 0 ? 'var(--ok)' : 'var(--bad)');
+    o += line(xr, dy - fs * 0.5, xr, dy + fs * 0.5, gapR >= 0 ? 'var(--ok)' : 'var(--bad)');
+    o += line(cx + halfO, dy - fs * 0.5, cx + halfO, dy + fs * 0.5, gapR >= 0 ? 'var(--ok)' : 'var(--bad)');
+    o += text((xr + cx + halfO) / 2, dy + fs * 1.5, fmtVal(Math.max(0, gapR)) + ' ' + S.unit + ' left over', 'middle', gapR >= 0 ? 'var(--ok)' : 'var(--bad)');
+    // opening dimension on top
+    var dt = top + fs * 2.2;
+    o += line(cx - halfO, dt, cx + halfO, dt, 'var(--fg)');
+    o += line(cx - halfO, dt - fs * 0.5, cx - halfO, dt + fs * 0.5, 'var(--fg)');
+    o += line(cx + halfO, dt - fs * 0.5, cx + halfO, dt + fs * 0.5, 'var(--fg)');
+    o += text(cx, dt - fs * 0.8, 'opening ' + fmtVal(need) + ' ' + S.unit, 'middle');
+    // container width label
+    o += text(cx, cy - B / 2 - fs * 0.8, 'container ' + fmtVal(A) + ' across, ' + fmtVal(B) + ' along', 'middle', 'var(--load)');
+    // travel arrow
+    var ax = cx - halfO - wall - pad * 0.45, ay1 = bot - fs * 2, ay2 = ay1 - Math.min(B * 0.35, vbH * 0.3);
+    o += line(ax, ay1, ax, ay2, 'var(--muted)');
+    o += '<polygon points="' + ax + ',' + (ay2 - fs * 0.9) + ' ' + (ax - fs * 0.5) + ',' + ay2 + ' ' + (ax + fs * 0.5) + ',' + ay2 + '" fill="var(--muted)"/>';
+    o += text(ax, ay1 + fs * 1.3, 'travel', 'middle', 'var(--muted)', fs * 0.85);
+    var svg = $('plan');
+    svg.setAttribute('viewBox', '0 0 ' + vbW.toFixed(1) + ' ' + vbH.toFixed(1));
+    svg.innerHTML = o;
+  }
+
+  function render() {
+    var c = calc();
+    $('needBig').innerHTML = fmtVal(c.needWorst) + ' <span>' + S.unit + '</span>';
+    $('sideBig').innerHTML = fmtVal(c.sideWorst) + ' <span>' + S.unit + '</span>';
+    var v = $('verdict');
+    if (S.opening === null) {
+      v.innerHTML = '<span class="pill na">no opening entered</span>';
+    } else {
+      var slack = (S.opening - c.needWorst) / 2;
+      var okW = slack >= 0, okR = (S.opening - c.needRss) / 2 >= 0;
+      if (okW) v.innerHTML = '<span class="pill ok">PASS, ' + fmtVal(slack) + ' ' + S.unit + ' spare per side</span>';
+      else if (okR) v.innerHTML = '<span class="pill bad">FAILS worst case by ' + fmtVal(-slack) + ' ' + S.unit + ' per side</span><div class="note" style="margin-top:4px">Passes the statistical (RSS) case.</div>';
+      else v.innerHTML = '<span class="pill bad">FAILS by ' + fmtVal(-slack) + ' ' + S.unit + ' per side</span>';
+    }
+    var rows = '';
+    c.terms.forEach(function (t) {
+      rows += '<tr><td>' + t.name + (t.note ? ' <small>' + t.note + '</small>' : '') + '</td><td class="n">' + fmtVal(t.v) + '</td><td class="n">' + '' + '</td></tr>';
+    });
+    // RSS column: show combined once
+    rows = rows.replace(/<td class="n"><\/td>/g, '<td class="n">–</td>');
+    rows += '<tr><td>Safety margin</td><td class="n">' + fmtVal(S.margin) + '</td><td class="n">' + fmtVal(S.margin) + '</td></tr>';
+    rows += '<tr class="total"><td>Clearance each side</td><td class="n">' + fmtVal(c.sideWorst) + ' ' + S.unit + '</td><td class="n">' + fmtVal(c.sideRss) + ' ' + S.unit + '</td></tr>';
+    rows += '<tr><td>Rack opening</td><td class="n">' + fmtVal(c.needWorst) + ' ' + S.unit + '</td><td class="n">' + fmtVal(c.needRss) + ' ' + S.unit + '</td></tr>';
+    $('budget').innerHTML = rows;
+    $('formula').textContent = 'Swept width = across × cos φ + along × sin φ = ' + fmtBoth(c.swept) + ' with φ = ' + c.phiDeg.toFixed(2) +
+      '°. Worst case adds every term. RSS combines the five error terms as a root-sum-square and adds the margin on top; it assumes the errors are independent and is a smaller, statistical estimate.';
+    drawPlan(c);
+  }
+
+  // events
+  lenKeys.forEach(function (k) {
+    $('f_' + k).addEventListener('input', function (e) {
+      var raw = e.target.value;
+      if (k === 'opening' && raw === '') S.opening = null;
+      else { var n = parseFloat(raw); if (!isFinite(n) || n < 0) return; S[k] = fromUnit(n); }
+      render();
+    });
+    $('f_' + k).addEventListener('blur', function () { writeInputs(); });
+  });
+  ['head', 'loadRot'].forEach(function (k) {
+    $(k).addEventListener('input', function (e) { var n = parseFloat(e.target.value); if (!isFinite(n) || n < 0) return; S[k] = n; render(); });
+  });
+  $('across').addEventListener('change', function (e) { S.across = e.target.value; render(); });
+  $('r2r').addEventListener('change', function (e) { S.r2r = e.target.checked; render(); });
+  function setUnit(u) { S.unit = u; document.querySelectorAll('.u').forEach(function (el) { if (el.textContent === 'mm' || el.textContent === 'in') el.textContent = u; }); writeInputs(); render(); }
+  $('u_mm').addEventListener('click', function () { setUnit('mm'); });
+  $('u_in').addEventListener('click', function () { setUnit('in'); });
+
+  // initial: set unit labels on length inputs only
+  document.querySelectorAll('.inp').forEach(function (w) {
+    var u = w.querySelector('.u'); if (u && !w.querySelector('input[id=head],input[id=loadRot]')) u.textContent = 'mm';
+  });
+  writeInputs();
+  render();
+})();
+</script>
+
+</body></html>

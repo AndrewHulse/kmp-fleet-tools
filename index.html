@@ -1,0 +1,104 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>KMP AMR Tools</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #eef1f4; --surface: #ffffff; --surface-2: #e1e6eb; --border: #c7d0d9;
+  --ink: #171a1e; --ink-muted: #5c6672; --accent: #d9631f; --accent-ink: #ffffff; --accent-soft: #f6ddc9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171b; --surface: #1b1f24; --surface-2: #20252b; --border: #2c333c;
+    --ink: #e7eaee; --ink-muted: #97a1ac; --accent: #ea7a3f; --accent-ink: #171a1e; --accent-soft: #3a2a1c;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171b; --surface: #1b1f24; --surface-2: #20252b; --border: #2c333c;
+  --ink: #e7eaee; --ink-muted: #97a1ac; --accent: #ea7a3f; --accent-ink: #171a1e; --accent-soft: #3a2a1c;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Archivo", ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.45;
+  padding: 36px 20px 60px; display: flex; justify-content: center;
+}
+.wrap { width: 100%; max-width: 980px; display: flex; flex-direction: column; gap: 26px; }
+.eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11.5px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--accent); margin: 0 0 6px;
+}
+h1 { font-size: clamp(28px,4vw,38px); font-weight: 800; letter-spacing: -0.01em; margin: 0 0 8px; text-wrap: balance; }
+.sub { color: var(--ink-muted); font-size: 14px; max-width: 64ch; margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; }
+.card {
+  display: flex; flex-direction: column; gap: 10px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+  text-decoration: none; color: var(--ink); transition: border-color 120ms ease, transform 120ms ease;
+}
+.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.card .tag {
+  display: inline-flex; align-self: flex-start; font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 3px 10px;
+}
+.card h2 { margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -0.01em; }
+.card p { margin: 0; color: var(--ink-muted); font-size: 12.8px; line-height: 1.5; flex: 1; }
+.card .go {
+  font-family: "JetBrains Mono", monospace; font-size: 12px; font-weight: 600; color: var(--ink-muted);
+  display: flex; align-items: center; gap: 6px; margin-top: 2px;
+}
+.card:hover .go { color: var(--accent); }
+footer { color: var(--ink-muted); font-size: 12px; text-align: center; margin-top: 10px; }
+</style>
+</head><body>
+<div class="wrap">
+  <div>
+    <p class="eyebrow">KMP &middot; AMR engineering tools</p>
+    <h1>Fleet Tools Hub</h1>
+    <p class="sub">Reference calculators and inspectors for AMR deployment work &mdash; safety-zone geometry, aisle sizing, drive-angle math, rack clearance, and fleet diagnostics. Pick a tool below; each links back here.</p>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="obstacle-field-configurator.html">
+      <span class="tag">Safety zones</span>
+      <h2>Obstacle Field Configurator</h2>
+      <p>Reference values for AMR safety-zone geometry. Edit fleet, robot/container and rack-suite values, then preview the detection field for any loaded / open-path / entering-rack combination.</p>
+      <span class="go">Open tool &rarr;</span>
+    </a>
+
+    <a class="card" href="aisle-width-calculator.html">
+      <span class="tag">Facility planning</span>
+      <h2>Aisle Width Calculator</h2>
+      <p>Pick a KMP robot model and load size to get the minimum one-lane and two-lane aisle width at each of the four forward speed zones, with editable safety-field constants.</p>
+      <span class="go">Open tool &rarr;</span>
+    </a>
+
+    <a class="card" href="crab-angle-finder.html">
+      <span class="tag">Drive math</span>
+      <h2>Crab-Angle Finder</h2>
+      <p>Paste two field points (or UUID/x/y pairs) and a target heading to get the crab-drive angle needed to move from A to B while holding that facing.</p>
+      <span class="go">Open tool &rarr;</span>
+    </a>
+
+    <a class="card" href="rack-clearance-calculator.html">
+      <span class="tag">Facility planning</span>
+      <h2>Rack Clearance Calculator</h2>
+      <p>Computes the minimum rack opening width for a load carried by an AMR from robot, load and rack tolerances, with a worst-case vs. RSS tolerance budget and a live top-down plan view.</p>
+      <span class="go">Open tool &rarr;</span>
+    </a>
+
+    <a class="card" href="fleet-map-inspector.html">
+      <span class="tag">Diagnostics</span>
+      <h2>Fleet Map Inspector</h2>
+      <p>Load a fleet diagnostic zip to inspect the map, validation checks, tuning, operation history and episode timelines.</p>
+      <span class="go">Open tool &rarr;</span>
+    </a>
+  </div>
+
+  <footer>All tools run fully client-side &mdash; nothing uploaded leaves the browser.</footer>
+</div>
+</body></html>

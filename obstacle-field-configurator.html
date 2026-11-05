@@ -1,0 +1,1214 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Obstacle Field Configurator</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light dark;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --surface-2: #e1e6eb;
+    --border: #c7d0d9;
+    --ink: #171a1e;
+    --ink-muted: #5c6672;
+    --accent: #d9631f;
+    --accent-ink: #ffffff;
+    --accent-soft: #f6ddc9;
+    --robot: #2c333b;
+    --robot-fill: rgba(44, 51, 59, 0.10);
+    --zone-open: #d9631f;
+    --zone-open-fill: rgba(217, 99, 31, 0.10);
+    --zone-rack: #21808a;
+    --zone-rack-fill: rgba(33, 128, 138, 0.10);
+    --container: #2f5fa8;
+    --container-fill: rgba(47, 95, 168, 0.14);
+    --grid-line: rgba(23, 26, 30, 0.06);
+    --grid-line-strong: rgba(23, 26, 30, 0.14);
+    --shadow: 0 1px 2px rgba(23,26,30,0.06), 0 8px 24px rgba(23,26,30,0.06);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171b;
+      --surface: #1b1f24;
+      --surface-2: #20252b;
+      --border: #2c333c;
+      --ink: #e7eaee;
+      --ink-muted: #97a1ac;
+      --accent: #ea7a3f;
+      --accent-ink: #171a1e;
+      --accent-soft: #3a2a1c;
+      --robot: #c9d1d9;
+      --robot-fill: rgba(201, 209, 217, 0.12);
+      --zone-open: #ea7a3f;
+      --zone-open-fill: rgba(234, 122, 63, 0.12);
+      --zone-rack: #3fb6c2;
+      --zone-rack-fill: rgba(63, 182, 194, 0.12);
+      --container: #6f9adf;
+      --container-fill: rgba(111, 154, 223, 0.16);
+      --grid-line: rgba(231, 234, 238, 0.06);
+      --grid-line-strong: rgba(231, 234, 238, 0.14);
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14171b;
+    --surface: #1b1f24;
+    --surface-2: #20252b;
+    --border: #2c333c;
+    --ink: #e7eaee;
+    --ink-muted: #97a1ac;
+    --accent: #ea7a3f;
+    --accent-ink: #171a1e;
+    --accent-soft: #3a2a1c;
+    --robot: #c9d1d9;
+    --robot-fill: rgba(201, 209, 217, 0.12);
+    --zone-open: #ea7a3f;
+    --zone-open-fill: rgba(234, 122, 63, 0.12);
+    --zone-rack: #3fb6c2;
+    --zone-rack-fill: rgba(63, 182, 194, 0.12);
+    --container: #6f9adf;
+    --container-fill: rgba(111, 154, 223, 0.16);
+    --grid-line: rgba(231, 234, 238, 0.06);
+    --grid-line-strong: rgba(231, 234, 238, 0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  [hidden] { display: none !important; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .app {
+    display: flex;
+    height: 100%;
+    min-height: 100%;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .panel {
+    width: 400px;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-head h1 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .panel-head p {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 12.5px;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    appearance: none;
+    border: none;
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    padding: 12px 10px 10px;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+    /* Reserve room for the "in use" flag row so the tab bar never resizes when it toggles on/off. */
+    min-height: 50px;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  .tab:hover { color: var(--ink); }
+
+  .tab[aria-selected="true"] {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .tab[aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .tab-name { display: block; }
+
+  .tab-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 3px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 140ms ease;
+  }
+
+  .tab-flag.is-inactive {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  .tab-flag::before {
+    content: "";
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .tab-panels {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 22px 28px;
+  }
+
+  .field-group { display: none; flex-direction: column; gap: 18px; }
+  .field-group.active { display: flex; }
+
+  .group-note {
+    margin: -6px 0 0;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  .subgroup {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 14px 4px;
+    background: var(--bg);
+  }
+
+  .subgroup h3 {
+    margin: 0 0 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-muted);
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .field-row label {
+    font-size: 13px;
+    color: var(--ink);
+  }
+
+
+  .field-input {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+  }
+
+  .field-input input[type="number"] {
+    width: 84px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .field-input input[type="number"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .field-input .unit {
+    font-size: 11px;
+    color: var(--ink-muted);
+    width: 20px;
+  }
+
+  /* ---------- Sim ---------- */
+  .sim {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .sim-readout {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    padding: 20px 28px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .readout-item .label {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 2px;
+  }
+
+  .readout-item .value {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .readout-item .value .sep { color: var(--ink-muted); font-weight: 500; margin: 0 4px; }
+
+  .mode-pill {
+    margin-left: auto;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+
+  .mode-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--zone-open); }
+  .mode-pill.rack .dot { background: var(--zone-rack); }
+
+  .sim-main {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  .sim-canvas-wrap {
+    flex: 1;
+    display: flex;
+    padding: 8px 20px;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  /* #simCanvas has no intrinsic height of its own; without an explicit size here,
+     the svg's height:100% has nothing definite to resolve against and falls back
+     to its raw 640x760 intrinsic size, overflowing this box in both directions. */
+  #simCanvas {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .sim-canvas-wrap svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .z-panel {
+    flex: none;
+    width: 240px;
+    border-left: 1px solid var(--border);
+    background: var(--surface-2);
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+
+  .z-readout {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: none;
+  }
+
+  .z-readout .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .z-readout .value {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .z-readout .value .sep { color: var(--ink-muted); font-weight: 500; margin: 0 4px; font-family: "Archivo", sans-serif; font-size: 11px; }
+
+  .z-readout .z-source {
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+
+  .z-canvas {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .z-canvas svg { display: block; width: 100%; height: 100%; }
+
+  .z-canvas .z-empty {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  .sim-controls {
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 16px 28px calc(16px + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    user-select: none;
+  }
+
+  .toggle input[type="checkbox"] {
+    appearance: none;
+    width: 34px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    position: relative;
+    cursor: pointer;
+    flex: none;
+    transition: background-color 140ms ease;
+  }
+
+  .toggle input[type="checkbox"]::after {
+    content: "";
+    position: absolute;
+    top: 1px; left: 1px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    transition: transform 140ms ease;
+  }
+
+  .toggle input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .toggle input[type="checkbox"]:checked::after { transform: translateX(14px); }
+
+  .toggle input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .rack-mode {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+  }
+
+  .rack-mode label {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--ink-muted);
+    position: relative;
+  }
+
+  .rack-mode input { position: absolute; opacity: 0; pointer-events: none; }
+
+  .rack-mode label:has(input:checked) {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+
+  /* Same shape as .rack-mode. Stays in the layout (space reserved) even when inactive —
+     only its visibility toggles — so the controls bar never resizes when it appears. */
+  .holder-type {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 140ms ease;
+  }
+
+  .holder-type.is-inactive {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .holder-type label {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--ink-muted);
+    position: relative;
+  }
+
+  .holder-type input { position: absolute; opacity: 0; pointer-events: none; }
+
+  .holder-type label:has(input:checked) {
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow);
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+
+  .legend-swatch {
+    width: 11px; height: 11px;
+    border-radius: 3px;
+    flex: none;
+  }
+
+  .hub-back{
+    position: fixed;
+    top: calc(14px + env(safe-area-inset-top, 0px));
+    right: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Archivo", sans-serif;
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: .01em;
+    color: var(--ink-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 14px 7px 12px;
+    text-decoration: none;
+    z-index: 20;
+  }
+  .hub-back:hover{ color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 800px) {
+    .app { flex-direction: column; }
+    .panel { width: 100%; max-height: 46vh; border-right: none; border-bottom: 1px solid var(--border); }
+    .sim-readout { padding: 16px 18px 10px; }
+    .sim-main { flex-direction: column; }
+    .z-panel {
+      width: auto;
+      flex-direction: row;
+      align-items: center;
+      border-left: none;
+      border-top: 1px solid var(--border);
+      padding: 10px 18px;
+      gap: 16px;
+    }
+    .z-canvas { height: 56px; }
+    .sim-controls { padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px)); gap: 16px; }
+    .legend { margin-left: 0; width: 100%; }
+    .hub-back { position: static; margin: 10px 18px 0; align-self: flex-start; }
+  }
+</style>
+
+<a class="hub-back" href="index.html">&larr; Hub</a>
+
+<div class="app" id="app">
+  <aside class="panel">
+    <div class="panel-head">
+      <h1>Obstacle Field Configurator</h1>
+      <p>Reference values for AMR safety-zone geometry. Edit a set, then use the toggles below the field to preview it.</p>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="fleet" aria-selected="true">
+        <span class="tab-name">Fleet</span>
+        <span class="tab-flag is-inactive">in use</span>
+      </button>
+      <button class="tab" role="tab" data-tab="size" aria-selected="false">
+        <span class="tab-name">Robot &amp; Container</span>
+        <span class="tab-flag is-inactive">in use</span>
+      </button>
+      <button class="tab" role="tab" data-tab="suite-without" aria-selected="false">
+        <span class="tab-name">Suite · No Load</span>
+        <span class="tab-flag is-inactive">in use</span>
+      </button>
+      <button class="tab" role="tab" data-tab="suite-with" aria-selected="false">
+        <span class="tab-name">Suite · Loaded</span>
+        <span class="tab-flag is-inactive">in use</span>
+      </button>
+    </div>
+
+    <div class="tab-panels">
+      <section class="field-group active" data-panel="fleet">
+        <p class="group-note">Open-path stop distances, added around the robot footprint when it is <strong>not</strong> entering a rack or bracket.</p>
+        <div class="subgroup">
+          <h3>Stop distances</h3>
+          <div class="field-row">
+            <label for="f_front">Front safe distance</label>
+            <div class="field-input"><input type="number" id="f_front" value="150" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="f_back">Back safe distance</label>
+            <div class="field-input"><input type="number" id="f_back" value="150" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="f_left">Left safe distance</label>
+            <div class="field-input"><input type="number" id="f_left" value="50" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="f_right">Right safe distance</label>
+            <div class="field-input"><input type="number" id="f_right" value="50" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+        <div class="subgroup">
+          <h3>3D camera detection (Z)</h3>
+          <div class="field-row">
+            <label for="f_zmax">High detect Z max</label>
+            <div class="field-input"><input type="number" id="f_zmax" value="150" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="f_zmin">Low detect Z min</label>
+            <div class="field-input"><input type="number" id="f_zmin" value="-300" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="field-group" data-panel="size">
+        <p class="group-note">Robot footprint is always included. Container size is added on top when <strong>Loaded</strong> is checked and the robot is not in a rack.</p>
+        <div class="subgroup">
+          <h3>Robot (AMR + top module)</h3>
+          <div class="field-row">
+            <label for="r_x">Robot X size (width)</label>
+            <div class="field-input"><input type="number" id="r_x" value="960" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="r_y">Robot Y size (front–back)</label>
+            <div class="field-input"><input type="number" id="r_y" value="1300" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+        <div class="subgroup">
+          <h3>Container / load</h3>
+          <div class="field-row">
+            <label for="c_len">Length (front-facing)</label>
+            <div class="field-input"><input type="number" id="c_len" value="800" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="c_wid">Width</label>
+            <div class="field-input"><input type="number" id="c_wid" value="620" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="field-group" data-panel="suite-without">
+        <p class="group-note">Rack / bracket detection field when the robot carries <strong>no load</strong>. Fleet values are ignored while entering a rack or bracket. Same X/Y/Z numbers are shared by both — Z is only used when the holder type is set to <strong>Bracket</strong>; a rack always ignores height. Example values shown — replace with yours.</p>
+        <div class="subgroup">
+          <h3>Enter holder</h3>
+          <div class="field-row">
+            <label for="swl_enterX">Enter holder X</label>
+            <div class="field-input"><input type="number" id="swl_enterX" value="40" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swl_enterY">Enter holder Y</label>
+            <div class="field-input"><input type="number" id="swl_enterY" value="60" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swl_enterZmax">Enter holder Z max</label>
+            <div class="field-input"><input type="number" id="swl_enterZmax" value="500" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swl_enterZmin">Enter holder Z min</label>
+            <div class="field-input"><input type="number" id="swl_enterZmin" value="-300" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+        <div class="subgroup">
+          <h3>Leave holder</h3>
+          <div class="field-row">
+            <label for="swl_leaveX">Leave holder X</label>
+            <div class="field-input"><input type="number" id="swl_leaveX" value="40" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swl_leaveY">Leave holder Y</label>
+            <div class="field-input"><input type="number" id="swl_leaveY" value="60" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swl_leaveZmax">Leave holder Z max</label>
+            <div class="field-input"><input type="number" id="swl_leaveZmax" value="500" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swl_leaveZmin">Leave holder Z min</label>
+            <div class="field-input"><input type="number" id="swl_leaveZmin" value="-300" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="field-group" data-panel="suite-with">
+        <p class="group-note">Rack / bracket detection field when the robot carries a <strong>load</strong>. Fleet values are ignored while entering a rack or bracket. Same X/Y/Z numbers are shared by both — Z is only used when the holder type is set to <strong>Bracket</strong>; a rack always ignores height. Example values shown — replace with yours.</p>
+        <div class="subgroup">
+          <h3>Enter holder</h3>
+          <div class="field-row">
+            <label for="swwl_enterX">Enter holder X</label>
+            <div class="field-input"><input type="number" id="swwl_enterX" value="80" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swwl_enterY">Enter holder Y</label>
+            <div class="field-input"><input type="number" id="swwl_enterY" value="100" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swwl_enterZmax">Enter holder Z max</label>
+            <div class="field-input"><input type="number" id="swwl_enterZmax" value="500" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swwl_enterZmin">Enter holder Z min</label>
+            <div class="field-input"><input type="number" id="swwl_enterZmin" value="-300" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+        <div class="subgroup">
+          <h3>Leave holder</h3>
+          <div class="field-row">
+            <label for="swwl_leaveX">Leave holder X</label>
+            <div class="field-input"><input type="number" id="swwl_leaveX" value="80" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swwl_leaveY">Leave holder Y</label>
+            <div class="field-input"><input type="number" id="swwl_leaveY" value="100" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swwl_leaveZmax">Leave holder Z max</label>
+            <div class="field-input"><input type="number" id="swwl_leaveZmax" value="500" step="10"><span class="unit">mm</span></div>
+          </div>
+          <div class="field-row">
+            <label for="swwl_leaveZmin">Leave holder Z min</label>
+            <div class="field-input"><input type="number" id="swwl_leaveZmin" value="-300" step="10"><span class="unit">mm</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <main class="sim">
+    <div class="sim-readout">
+      <div class="readout-item">
+        <span class="label">Total footprint (W × L)</span>
+        <span class="value" id="readoutSize">960<span class="sep">×</span>1300 mm</span>
+      </div>
+      <div class="readout-item">
+        <span class="label">Source</span>
+        <span class="value" id="readoutSource" style="font-size:15px; font-weight:600;">Fleet + Robot</span>
+      </div>
+      <div class="mode-pill" id="modePill"><span class="dot"></span><span id="modePillText">Open path</span></div>
+    </div>
+
+    <div class="sim-main">
+      <div class="sim-canvas-wrap">
+        <div id="simCanvas"></div>
+      </div>
+
+      <div class="z-panel">
+        <div class="z-readout">
+          <span class="label">Vertical detection range (Z)</span>
+          <span class="value" id="zValue">150<span class="sep">to</span>−300 mm</span>
+          <span class="z-source" id="zSource">Fleet</span>
+        </div>
+        <div id="zCanvas" class="z-canvas"></div>
+      </div>
+    </div>
+
+    <div class="sim-controls">
+      <label class="toggle">
+        <input type="checkbox" id="chkLoaded">
+        Loaded
+      </label>
+      <div class="rack-mode" role="radiogroup" aria-label="Path mode">
+        <label><input type="radio" name="rackMode" value="open" checked><span>Open path</span></label>
+        <label><input type="radio" name="rackMode" value="entering"><span>Entering</span></label>
+        <label><input type="radio" name="rackMode" value="leaving"><span>Leaving</span></label>
+      </div>
+      <div class="holder-type is-inactive" id="holderType" role="radiogroup" aria-label="Holder type">
+        <label><input type="radio" name="holderKind" value="rack" checked><span>Rack</span></label>
+        <label><input type="radio" name="holderKind" value="bracket"><span>Bracket</span></label>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--robot);"></span>Robot</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--container);"></span>Container</div>
+        <div class="legend-item"><span class="legend-swatch" style="background:var(--zone-open);"></span>Detection field</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+  const num = (id) => {
+    const el = document.getElementById(id);
+    const v = parseFloat(el.value);
+    return Number.isFinite(v) ? v : 0;
+  };
+
+  // ---- Tabs ----
+  const tabs = $$('.tab');
+  const panels = $$('.field-group');
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+      panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === tab.dataset.tab));
+    });
+  });
+
+  function setActiveFlag(tabName, on) {
+    const tab = tabs.find((t) => t.dataset.tab === tabName);
+    const flag = tab && tab.querySelector('.tab-flag');
+    if (flag) flag.classList.toggle('is-inactive', !on);
+  }
+
+  // ---- Controls ----
+  const chkLoaded = $('#chkLoaded');
+  const holderType = $('#holderType');
+  const modePill = $('#modePill');
+  const modePillText = $('#modePillText');
+
+  function rackMode() {
+    return $('input[name="rackMode"]:checked').value; // 'open' | 'entering' | 'leaving'
+  }
+
+  function holderKind() {
+    return $('input[name="holderKind"]:checked').value; // 'rack' | 'bracket'
+  }
+
+  chkLoaded.addEventListener('change', render);
+  $$('input[name="rackMode"]').forEach((r) => r.addEventListener('change', () => {
+    holderType.classList.toggle('is-inactive', rackMode() === 'open');
+    render();
+  }));
+  $$('input[name="holderKind"]').forEach((r) => r.addEventListener('change', render));
+  $$('.tab-panels input[type="number"]').forEach((inp) => inp.addEventListener('input', render));
+
+  function fmt(n) {
+    return Math.round(n).toLocaleString('en-US');
+  }
+
+  function computeZoneFor(loaded, rack, leaving, kind) {
+    const robotX = num('r_x'), robotY = num('r_y');
+
+    let widthX, lengthY;
+    let sides = { front: 0, back: 0, left: 0, right: 0 };
+    let containerBox = null;
+    let source, modeLabel, zoneClass;
+
+    if (!rack) {
+      const ff = num('f_front'), fb = num('f_back'), fl = num('f_left'), fr = num('f_right');
+      sides = { front: ff, back: fb, left: fl, right: fr };
+
+      if (loaded) {
+        const cLen = num('c_len'), cWid = num('c_wid');
+        const effY = Math.max(robotY, cLen);
+        const effX = Math.max(robotX, cWid);
+        widthX = effX + fl + fr;
+        lengthY = effY + ff + fb;
+        containerBox = { w: cWid, l: cLen };
+        source = 'max(Robot, Container) + Fleet';
+        modeLabel = 'Loaded · Open path';
+        zoneClass = 'open';
+      } else {
+        widthX = robotX + fl + fr;
+        lengthY = robotY + ff + fb;
+        source = 'Robot + Fleet';
+        modeLabel = 'Unloaded · Open path';
+        zoneClass = 'open';
+      }
+    } else {
+      const prefix = loaded ? 'swwl' : 'swl';
+      const dir = leaving ? 'leave' : 'enter';
+      const x = num(`${prefix}_${dir}X`);
+      const y = num(`${prefix}_${dir}Y`);
+      const halfX = x / 2, halfY = y / 2;
+      sides = { front: halfY, back: halfY, left: halfX, right: halfX };
+
+      widthX = robotX + x;
+      lengthY = robotY + y;
+      source = `Robot + Suite (${loaded ? 'with load' : 'no load'}, ${leaving ? 'leave' : 'enter'})`;
+      modeLabel = `${loaded ? 'Loaded' : 'Unloaded'} · ${leaving ? 'Leaving' : 'Entering'} ${kind || 'rack'}`;
+      zoneClass = 'rack';
+    }
+
+    return { robotX, robotY, widthX, lengthY, sides, containerBox, source, modeLabel, zoneClass, loaded, rack };
+  }
+
+  // All 6 loaded/rack/enter-leave combinations, used only to size the grid consistently.
+  function computeMaxExtents() {
+    const combos = [
+      [false, false, false],
+      [true, false, false],
+      [false, true, false],
+      [false, true, true],
+      [true, true, false],
+      [true, true, true],
+    ];
+    let maxW = 0, maxL = 0;
+    combos.forEach(([loaded, rack, leaving]) => {
+      const z = computeZoneFor(loaded, rack, leaving);
+      maxW = Math.max(maxW, z.widthX);
+      maxL = Math.max(maxL, z.lengthY);
+    });
+    return { maxW, maxL };
+  }
+
+  function computeZone() {
+    const loaded = chkLoaded.checked;
+    const mode = rackMode();
+    const rack = mode !== 'open';
+    const leaving = mode === 'leaving';
+    const kind = rack ? holderKind() : null;
+
+    setActiveFlag('fleet', !rack);
+    setActiveFlag('size', true);
+    setActiveFlag('suite-without', rack && !loaded);
+    setActiveFlag('suite-with', rack && loaded);
+
+    return computeZoneFor(loaded, rack, leaving, kind);
+  }
+
+  // Z max/min source: open path (loaded or not) always uses Fleet. Racks and brackets share
+  // the same Suite X/Y/Z numbers, but only a bracket ever uses the Z part — a rack ignores
+  // height detection entirely, loaded or not.
+  function computeZ(loaded, rack, leaving, kind) {
+    if (!rack) {
+      return { zMax: num('f_zmax'), zMin: num('f_zmin'), source: 'Fleet', ignored: false };
+    }
+    if (kind !== 'bracket') {
+      return { zMax: null, zMin: null, source: 'Ignored (rack)', ignored: true };
+    }
+    const prefix = loaded ? 'swwl' : 'swl';
+    const dir = leaving ? 'leave' : 'enter';
+    return {
+      zMax: num(`${prefix}_${dir}Zmax`),
+      zMin: num(`${prefix}_${dir}Zmin`),
+      source: `Suite · bracket, ${loaded ? 'loaded' : 'no load'}, ${dir}`,
+      ignored: false,
+    };
+  }
+
+  // The Z bands that can ever be live (Fleet, and Suite bracket enter/leave × no-load/loaded)
+  // — used to size the cone's vertical scale once, so it doesn't jump when toggling states.
+  function computeMaxZExtents() {
+    const bands = [
+      computeZ(false, false, false, null),
+      computeZ(false, true, false, 'bracket'),
+      computeZ(false, true, true, 'bracket'),
+      computeZ(true, true, false, 'bracket'),
+      computeZ(true, true, true, 'bracket'),
+    ];
+    let maxZ = 0, minZ = 0;
+    bands.forEach((b) => {
+      if (b.ignored) return;
+      maxZ = Math.max(maxZ, b.zMax);
+      minZ = Math.min(minZ, b.zMin);
+    });
+    return { maxZ: maxZ || 10, minZ: minZ || -10 };
+  }
+
+  function renderSVG(state, gridExtents) {
+    const { robotX, robotY, widthX, lengthY, sides, containerBox, zoneClass } = state;
+
+    const VBW = 640, VBH = 760;
+    const PAD_X = 130;
+    // Top needs extra room for the FRONT marker, front dimension arrow and its label
+    // stacked above the zone box; bottom only needs room for the back dimension label
+    // plus the overall-total readout beneath it.
+    const PAD_TOP = 170, PAD_BOTTOM = 130;
+    const availW = VBW - PAD_X * 2;
+    const availH = VBH - PAD_TOP - PAD_BOTTOM;
+    // Scale is fixed to whatever the largest scenario needs, so the grid never
+    // rescales when toggling Loaded / Entering rack — only the drawn shapes change size.
+    const scale = Math.min(availW / gridExtents.maxW, availH / gridExtents.maxL, 0.58);
+
+    const cx = VBW / 2, cy = PAD_TOP + availH / 2;
+
+    // The zone (detection field) box is always centered in the canvas — that's what the
+    // fixed grid scale is sized around. The robot (and container) then sit inside it,
+    // offset toward whichever side has the smaller margin, exactly the way asymmetric
+    // fleet/suite values should look: the field doesn't grow lopsided, the robot's
+    // position within it does.
+    const zoneWpx = widthX * scale, zoneHpx = lengthY * scale;
+    const zoneX = cx - zoneWpx / 2, zoneY = cy - zoneHpx / 2;
+
+    const frontPx = sides.front * scale, backPx = sides.back * scale;
+    const leftPx = sides.left * scale, rightPx = sides.right * scale;
+
+    // Bounding box of robot+container together (the "inner" shape the margins wrap around).
+    const innerWpx = zoneWpx - leftPx - rightPx;
+    const innerHpx = zoneHpx - frontPx - backPx;
+    const innerCx = zoneX + leftPx + innerWpx / 2;
+    const innerCy = zoneY + frontPx + innerHpx / 2;
+
+    const robotWpx = robotX * scale, robotHpx = robotY * scale;
+    const robotXpx = innerCx - robotWpx / 2, robotYpx = innerCy - robotHpx / 2;
+    const robotCx = robotXpx + robotWpx / 2, robotCy = robotYpx + robotHpx / 2;
+
+    // Edges of the margin boundary itself (robot's edge, or the container's if it's larger)
+    // — this is what each side's mm value actually measures, so the gap arrows anchor here.
+    const innerLeft = zoneX + leftPx, innerRight = zoneX + zoneWpx - rightPx;
+    const innerTop = zoneY + frontPx, innerBottom = zoneY + zoneHpx - backPx;
+
+    let containerRect = '';
+    if (containerBox) {
+      const cw = containerBox.w * scale, cl = containerBox.l * scale;
+      const cxpx = innerCx - cw / 2, cypx = innerCy - cl / 2;
+      containerRect = `<rect x="${cxpx.toFixed(1)}" y="${cypx.toFixed(1)}" width="${cw.toFixed(1)}" height="${cl.toFixed(1)}"
+        fill="var(--container-fill)" stroke="var(--container)" stroke-width="1.6" stroke-dasharray="6 4" rx="4"/>`;
+    }
+
+    // background grid, every 100mm
+    const gridStep = 100 * scale;
+    let grid = '';
+    for (let gx = cx; gx <= VBW; gx += gridStep) grid += line(gx, 0, gx, VBH, false);
+    for (let gx = cx; gx >= 0; gx -= gridStep) grid += line(gx, 0, gx, VBH, false);
+    for (let gy = cy; gy <= VBH; gy += gridStep) grid += line(0, gy, VBW, gy, false);
+    for (let gy = cy; gy >= 0; gy -= gridStep) grid += line(0, gy, VBW, gy, false);
+    grid += line(cx, 0, cx, VBH, true) + line(0, cy, VBW, cy, true);
+
+    function line(x1, y1, x2, y2, strong) {
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+        stroke="${strong ? 'var(--grid-line-strong)' : 'var(--grid-line)'}" stroke-width="1"/>`;
+    }
+
+    function dimLabel(x, y, text, anchor) {
+      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor || 'middle'}"
+        font-family="JetBrains Mono, monospace" font-size="12.5" font-weight="600" fill="var(--ink)">${text}</text>`;
+    }
+
+    function dimArrow(x1, y1, x2, y2) {
+      return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"
+        stroke="var(--ink-muted)" stroke-width="1" marker-start="url(#arrowStart)" marker-end="url(#arrowEnd)"/>`;
+    }
+
+    // A short vertical arrow measuring one gap (front or back), with its mm label beside it.
+    function vGap(x, y1, y2, valueMm) {
+      const midY = (y1 + y2) / 2;
+      return dimArrow(x, y1, x, y2) +
+        `<text x="${(x + 8).toFixed(1)}" y="${(midY + 4).toFixed(1)}" text-anchor="start"
+          font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600" fill="var(--ink)">${valueMm.toFixed(0)} mm</text>`;
+    }
+
+    // A short horizontal arrow measuring one gap (left or right), with its mm label above it.
+    function hGap(x1, x2, y, valueMm) {
+      const midX = (x1 + x2) / 2;
+      return dimArrow(x1, y, x2, y) +
+        `<text x="${midX.toFixed(1)}" y="${(y - 7).toFixed(1)}" text-anchor="middle"
+          font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="600" fill="var(--ink)">${valueMm.toFixed(0)} mm</text>`;
+    }
+
+    // Offsets so the front/back arrows sit beside the FRONT marker (not on top of it), and
+    // the left/right arrows sit beside the robot's center dot.
+    const vOffset = Math.min(innerWpx * 0.3, 56);
+    const hOffset = -Math.min(innerHpx * 0.22, 40);
+
+    const svg = `
+<svg viewBox="0 0 ${VBW} ${VBH}" width="${VBW}" height="${VBH}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Top-down obstacle field diagram">
+  <defs>
+    <marker id="arrowStart" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto">
+      <path d="M7,1 L1,4 L7,7" fill="none" stroke="var(--ink-muted)" stroke-width="1.4"/>
+    </marker>
+    <marker id="arrowEnd" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M1,1 L7,4 L1,7" fill="none" stroke="var(--ink-muted)" stroke-width="1.4"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="${VBW}" height="${VBH}" fill="var(--surface)"/>
+  ${grid}
+
+  <!-- detection / safety zone -->
+  <rect x="${zoneX.toFixed(1)}" y="${zoneY.toFixed(1)}" width="${zoneWpx.toFixed(1)}" height="${zoneHpx.toFixed(1)}"
+    fill="var(--zone-${zoneClass}-fill)" stroke="var(--zone-${zoneClass})" stroke-width="2" rx="6"/>
+
+  ${containerRect}
+
+  <!-- robot footprint -->
+  <rect x="${robotXpx.toFixed(1)}" y="${robotYpx.toFixed(1)}" width="${robotWpx.toFixed(1)}" height="${robotHpx.toFixed(1)}"
+    fill="var(--robot-fill)" stroke="var(--robot)" stroke-width="2" rx="10"/>
+  <circle cx="${robotCx.toFixed(1)}" cy="${robotCy.toFixed(1)}" r="4" fill="var(--robot)"/>
+
+  <!-- front direction marker -->
+  <path d="M ${(robotCx - 9).toFixed(1)} ${(robotYpx + 16).toFixed(1)} L ${robotCx.toFixed(1)} ${(robotYpx + 2).toFixed(1)} L ${(robotCx + 9).toFixed(1)} ${(robotYpx + 16).toFixed(1)} Z" fill="var(--robot)" opacity="0.55"/>
+  ${dimLabel(robotCx, robotYpx - 8, 'FRONT')}
+
+  <!-- front gap: vertical arrow from zone's top edge down to the robot/container's top edge -->
+  ${vGap(innerCx + vOffset, zoneY, innerTop, sides.front)}
+
+  <!-- back gap: vertical arrow from the robot/container's bottom edge down to the zone's bottom edge -->
+  ${vGap(innerCx + vOffset, innerBottom, zoneY + zoneHpx, sides.back)}
+
+  <!-- left gap: horizontal arrow from the zone's left edge to the robot/container's left edge -->
+  ${hGap(zoneX, innerLeft, innerCy + hOffset, sides.left)}
+
+  <!-- right gap: horizontal arrow from the robot/container's right edge to the zone's right edge -->
+  ${hGap(innerRight, zoneX + zoneWpx, innerCy + hOffset, sides.right)}
+
+  <!-- overall totals -->
+  ${dimLabel(cx, VBH - 14, `${widthX.toFixed(0)} × ${lengthY.toFixed(0)} mm overall`)}
+</svg>`;
+    return svg;
+  }
+
+  // Horizontal orientation (robot body on left, cone opening rightward to a vertical
+  // bracket) — sized to the narrow column's actual width so it renders compact rather
+  // than being stretched or reduced to unreadably small text.
+  function renderZSVG(zState, zExtents) {
+    if (zState.ignored) {
+      return null;
+    }
+    const VBW = 200, VBH = 112;
+    const centerY = VBH / 2;
+    const PAD = 14;
+    const availHalf = centerY - PAD;
+    const scaleZ = Math.min(availHalf / zExtents.maxZ, availHalf / Math.abs(zExtents.minZ));
+
+    const bodyX = 8, bodyW = 44, bodyH = 22;
+    const apexX = bodyX + bodyW;
+    const coneX = 148;
+    const topY = centerY - zState.zMax * scaleZ;
+    const bottomY = centerY - zState.zMin * scaleZ;
+
+    return `
+<svg viewBox="0 0 ${VBW} ${VBH}" width="${VBW}" height="${VBH}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Side profile of vertical detection range">
+  <line x1="${apexX}" y1="${centerY}" x2="${coneX + 10}" y2="${centerY}" stroke="var(--ink-muted)" stroke-width="1" stroke-dasharray="3 3"/>
+  <path d="M ${apexX} ${centerY} L ${coneX} ${topY.toFixed(1)} L ${coneX} ${bottomY.toFixed(1)} Z"
+    fill="var(--zone-open-fill)" stroke="var(--zone-open)" stroke-width="1.6"/>
+  <rect x="${bodyX}" y="${(centerY - bodyH / 2).toFixed(1)}" width="${bodyW}" height="${bodyH}" rx="4"
+    fill="var(--robot-fill)" stroke="var(--robot)" stroke-width="1.6"/>
+  <line x1="${coneX}" y1="${topY.toFixed(1)}" x2="${coneX}" y2="${bottomY.toFixed(1)}" stroke="var(--ink-muted)" stroke-width="1.4"/>
+  <line x1="${coneX - 5}" y1="${topY.toFixed(1)}" x2="${coneX + 5}" y2="${topY.toFixed(1)}" stroke="var(--ink-muted)" stroke-width="1.4"/>
+  <line x1="${coneX - 5}" y1="${bottomY.toFixed(1)}" x2="${coneX + 5}" y2="${bottomY.toFixed(1)}" stroke="var(--ink-muted)" stroke-width="1.4"/>
+  <text x="${coneX + 8}" y="${(topY + 4).toFixed(1)}" text-anchor="start"
+    font-family="JetBrains Mono, monospace" font-size="12" font-weight="600" fill="var(--ink)">${zState.zMax.toFixed(0)}</text>
+  <text x="${coneX + 8}" y="${(bottomY + 4).toFixed(1)}" text-anchor="start"
+    font-family="JetBrains Mono, monospace" font-size="12" font-weight="600" fill="var(--ink)">${zState.zMin.toFixed(0)}</text>
+</svg>`;
+  }
+
+  function render() {
+    const state = computeZone();
+    const gridExtents = computeMaxExtents();
+    $('#simCanvas').innerHTML = renderSVG(state, gridExtents);
+    $('#readoutSize').innerHTML = `${fmt(state.widthX)}<span class="sep">×</span>${fmt(state.lengthY)} mm`;
+    $('#readoutSource').textContent = state.source;
+    modePillText.textContent = state.modeLabel;
+    modePill.classList.toggle('rack', state.zoneClass === 'rack');
+
+    const leaving = rackMode() === 'leaving';
+    const kind = state.rack ? holderKind() : null;
+    const zState = computeZ(state.loaded, state.rack, leaving, kind);
+    const zExtents = computeMaxZExtents();
+    const zCanvas = $('#zCanvas');
+    const zSvg = renderZSVG(zState, zExtents);
+    if (zSvg) {
+      zCanvas.innerHTML = zSvg;
+      $('#zValue').innerHTML = `${fmt(zState.zMax)}<span class="sep">to</span>${fmt(zState.zMin)} mm`;
+    } else {
+      zCanvas.innerHTML = '<span class="z-empty">Height detection is ignored while entering a rack.</span>';
+      $('#zValue').textContent = '— not used —';
+    }
+    $('#zSource').textContent = zState.source;
+  }
+
+  render();
+})();
+</script>
+
+</body></html>

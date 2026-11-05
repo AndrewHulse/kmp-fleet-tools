@@ -1,0 +1,509 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Aisle Width Calculator</title>
+<style>
+  :root{
+    color-scheme: light;
+    --bg:#eef1f4;
+    --surface:#ffffff;
+    --surface-2:#e1e6eb;
+    --border:#c7d0d9;
+    --ink:#171a1e;
+    --ink-muted:#5c6672;
+    --accent:#d9631f;
+    --accent-ink:#ffffff;
+    --accent-soft:#f6ddc9;
+    --teal:#21808a;
+    --warn:#b4531a;
+    --err:#c14b3d;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --bg:#14171b;
+      --surface:#1b1f24;
+      --surface-2:#20252b;
+      --border:#2c333c;
+      --ink:#e7eaee;
+      --ink-muted:#97a1ac;
+      --accent:#ea7a3f;
+      --accent-ink:#171a1e;
+      --accent-soft:#3a2a1c;
+      --teal:#3fb6c2;
+      --warn:#e8964a;
+      --err:#e5776a;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --bg:#14171b;
+    --surface:#1b1f24;
+    --surface-2:#20252b;
+    --border:#2c333c;
+    --ink:#e7eaee;
+    --ink-muted:#97a1ac;
+    --accent:#ea7a3f;
+    --accent-ink:#171a1e;
+    --accent-soft:#3a2a1c;
+    --teal:#3fb6c2;
+    --warn:#e8964a;
+    --err:#e5776a;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Archivo", ui-sans-serif, system-ui, sans-serif;
+    font-size:14px;
+    line-height:1.45;
+    padding-inline:16px;
+    padding-block:28px 48px;
+    display:flex;
+    justify-content:center;
+  }
+  .wrap{width:100%;max-width:960px;display:flex;flex-direction:column;gap:18px;}
+
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .eyebrow{
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+    font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 6px;
+  }
+  h1{font-size:clamp(26px,4vw,34px);font-weight:800;letter-spacing:-0.01em;margin:0 0 6px;text-wrap:balance;}
+  .sub{color:var(--ink-muted);font-size:13.5px;max-width:62ch;margin:0;}
+
+  .hub-back{
+    display:inline-flex;align-items:center;gap:6px;
+    font-weight:700;font-size:12.5px;color:var(--ink-muted);
+    background:var(--surface);border:1px solid var(--border);border-radius:999px;
+    padding:7px 14px 7px 12px;text-decoration:none;flex:none;
+  }
+  .hub-back:hover{color:var(--accent);border-color:var(--accent);}
+
+  .tabs{
+    display:inline-flex;gap:4px;padding:3px;border-radius:10px;
+    background:var(--surface-2);border:1px solid var(--border);align-self:flex-start;
+  }
+  .tab{
+    appearance:none;border:0;background:transparent;color:var(--ink-muted);
+    font-family:inherit;font-size:13px;font-weight:700;padding:8px 18px;border-radius:7px;cursor:pointer;
+  }
+  .tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12);}
+  button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .panel h2{
+    margin:0 0 14px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
+  }
+
+  .banner{
+    border:1px solid var(--warn);background:var(--accent-soft);color:var(--ink);
+    border-radius:10px;padding:10px 14px;font-size:12.5px;
+  }
+  .banner b{color:var(--warn);}
+
+  /* calculator layout */
+  .calc-grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start;}
+  @media (max-width:760px){.calc-grid{grid-template-columns:1fr;}}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  .field label,.field .lbl{
+    font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
+  }
+  .seg{display:flex;flex-direction:column;gap:6px;}
+  .seg button{
+    appearance:none;text-align:left;font-family:inherit;font-size:14px;font-weight:700;
+    padding:10px 14px;border-radius:9px;border:1px solid var(--border);
+    background:var(--surface-2);color:var(--ink);cursor:pointer;
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  }
+  .seg button small{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:500;color:var(--ink-muted);}
+  .seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .seg button[aria-pressed="true"] small{color:var(--accent-ink);opacity:.8;}
+
+  .numin{display:flex;align-items:center;gap:8px;}
+  input[type="number"]{
+    width:100%;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:14px;
+    font-variant-numeric:tabular-nums;text-align:right;
+    padding:9px 10px;border:1px solid var(--border);border-radius:8px;
+    background:var(--surface-2);color:var(--ink);
+  }
+  .unit{font-size:12px;color:var(--ink-muted);width:24px;flex:none;}
+
+  .hint{font-size:12px;color:var(--ink-muted);margin:0;}
+
+  /* results */
+  .speeds{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:900px){.speeds{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:420px){.speeds{grid-template-columns:1fr;}}
+
+  .speed-card{
+    background:var(--surface-2);border:1px solid var(--border);border-radius:12px;
+    padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px;min-width:0;
+  }
+  .speed-card h3{
+    margin:0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--teal);
+    display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .speed-card h3 span{font-family:"JetBrains Mono",monospace;font-weight:500;color:var(--ink-muted);letter-spacing:0;text-transform:none;font-size:11px;}
+  .lane .k{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);}
+  .lane .v{
+    font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;
+    font-weight:700;font-size:24px;letter-spacing:-0.01em;
+  }
+  .lane.one .v{color:var(--accent);}
+  .lane .v small{font-size:12px;font-weight:500;color:var(--ink-muted);margin-left:3px;}
+  .lane .f{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-muted);margin-top:1px;overflow-wrap:anywhere;}
+
+  .tbl-wrap{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;font-family:"JetBrains Mono",monospace;font-size:12.5px;font-variant-numeric:tabular-nums;}
+  th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+  th{font-family:"Archivo",sans-serif;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-muted);}
+  th:first-child,td:first-child{text-align:left;}
+  tbody tr:last-child td{border-bottom:0;}
+  td.add{color:var(--teal);}
+
+  .summary{display:flex;flex-wrap:wrap;gap:8px 24px;margin-bottom:14px;font-size:12.5px;color:var(--ink-muted);}
+  .summary b{font-family:"JetBrains Mono",monospace;color:var(--ink);font-weight:600;}
+
+  /* constants */
+  .robot-card{margin-bottom:18px;}
+  .robot-card:last-child{margin-bottom:0;}
+  .robot-card h3{margin:0 0 12px;font-size:16px;font-weight:800;}
+  .size-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;}
+  .size-row .field{margin-bottom:0;width:170px;}
+  td input[type="number"]{width:88px;padding:6px 8px;font-size:13px;}
+  .zone-label{font-family:"Archivo",sans-serif;font-weight:700;color:var(--ink);}
+
+  .btn-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;}
+  .btn{
+    appearance:none;font-family:inherit;font-size:13px;font-weight:700;padding:8px 14px;border-radius:8px;
+    border:1px solid var(--border);background:var(--surface-2);color:var(--ink);cursor:pointer;
+  }
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+  .btn.danger-armed{border-color:var(--err);color:var(--err);}
+  .status{font-size:12px;color:var(--ink-muted);}
+  .status.err{color:var(--err);}
+  textarea{
+    width:100%;min-height:150px;resize:vertical;
+    font-family:"JetBrains Mono",monospace;font-size:12px;line-height:1.5;
+    background:var(--surface-2);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:10px 12px;
+  }
+  [hidden]{display:none !important;}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <p class="eyebrow">KMP aisle planning</p>
+      <h1>Aisle Width Calculator</h1>
+      <p class="sub">Pick a robot and enter the load size. You get the minimum aisle width for one lane and two lanes at each of the four forward speed zones.</p>
+    </div>
+    <a class="hub-back" href="index.html">&larr; Hub</a>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tabCalc" aria-selected="true" data-tab="calc">Calculator</button>
+    <button class="tab" role="tab" id="tabConst" aria-selected="false" data-tab="const">Constants</button>
+  </div>
+
+  <!-- ============ Calculator ============ -->
+  <div id="viewCalc" class="wrap" style="max-width:none;gap:18px;">
+    <div class="calc-grid">
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field">
+          <span class="lbl" id="robotLbl">Robot type</span>
+          <div class="seg" id="robotSeg" role="group" aria-labelledby="robotLbl"></div>
+        </div>
+        <div class="field">
+          <label for="loadW">Load width</label>
+          <div class="numin"><input type="number" id="loadW" min="0" step="10" inputmode="decimal"><span class="unit">mm</span></div>
+        </div>
+        <div class="field">
+          <label for="loadL">Load length</label>
+          <div class="numin"><input type="number" id="loadL" min="0" step="10" inputmode="decimal"><span class="unit">mm</span></div>
+        </div>
+        <p class="hint">Width is measured across the robot (left to right), length front to back.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px;min-width:0;">
+        <div class="panel">
+          <h2>Minimum aisle width</h2>
+          <div class="summary" id="summary"></div>
+          <div class="speeds" id="speeds"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Safety field after load allowance</h2>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>Speed</th><th>Front</th><th>Back</th><th>Left</th><th>Right</th></tr>
+              </thead>
+              <tbody id="fieldRows"></tbody>
+            </table>
+          </div>
+          <p class="hint" style="margin-top:12px;">Rotation diameter is the circle swept by the furthest corner of the speed 1 safety field about the robot centre. Each side is its base safety field plus half of the load overhang on that axis. Left and right use the width overhang, front and back use the length overhang. If the load is smaller than the robot, the overhang is 0.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Constants ============ -->
+  <div id="viewConst" class="wrap" style="max-width:none;gap:18px;" hidden>
+    <div class="panel">
+      <h2>Robot sizes and safety fields</h2>
+      <p class="hint" style="margin-bottom:16px;">All values in mm. Safety fields are the base distance on each side at each forward speed zone, before any load allowance. Changes save in this browser and update the calculator right away. Reset restores the built-in defaults.</p>
+      <div id="constCards"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Send or restore constants</h2>
+      <p class="hint" style="margin-bottom:10px;">Copy this JSON and send it back to bake the values into the calculator. To load values, paste JSON here and press Load.</p>
+      <textarea id="jsonBox" spellcheck="false" aria-label="Constants JSON"></textarea>
+      <div class="btn-row">
+        <button class="btn primary" id="copyBtn">Copy JSON</button>
+        <button class="btn" id="loadBtn">Load from JSON</button>
+        <button class="btn" id="resetBtn">Reset to defaults</button>
+        <span class="status" id="jsonStatus"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var MODELS = ['KMP-600P','KMP-1500P','KMP-3000P'];
+  var SIDES = [['f','Front'],['b','Back'],['l','Left'],['r','Right']];
+  var STORE_KEY = 'kmp-aisle-constants-v3';
+
+  function defaults(){
+    var z = function(f,l){ return {f:f,b:f,l:l,r:l}; };
+    return {
+      'KMP-600P':  {w:686,  l:980,  zones:[z(359,356), z(626,553),  z(1158,553), z(1816,553)]},
+      'KMP-1500P': {w:900,  l:1300, zones:[z(435,594), z(641,797),  z(1280,797), z(2076,797)]},
+      'KMP-3000P': {w:1200, l:2200, zones:[z(750,680), z(1140,780), z(1950,980), z(2480,1040)]}
+    };
+  }
+
+  function num(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+
+  function sanitize(obj){
+    if(!obj || typeof obj !== 'object') return null;
+    var src = obj.models && typeof obj.models === 'object' ? obj.models : obj;
+    var out = {};
+    for(var i=0;i<MODELS.length;i++){
+      var m = MODELS[i], s = src[m];
+      if(!s || typeof s !== 'object' || !Array.isArray(s.zones) || s.zones.length !== 4) return null;
+      out[m] = {w:num(s.w), l:num(s.l), zones:[]};
+      for(var z=0;z<4;z++){
+        var zz = s.zones[z] || {};
+        out[m].zones.push({f:num(zz.f), b:num(zz.b), l:num(zz.l), r:num(zz.r)});
+      }
+    }
+    return out;
+  }
+
+  var stored = false;
+  function loadStored(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(raw){ var s = sanitize(JSON.parse(raw)); if(s){ stored = true; return s; } }
+    }catch(e){}
+    return null;
+  }
+  function saveStored(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(C)); stored = true; }catch(e){}
+  }
+
+  var C = loadStored() || defaults();
+  var state = {model: MODELS[0], loadW: 800, loadL: 1200};
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function fmt(n){ return (Math.round(n*10)/10).toLocaleString('en-US'); }
+
+  // ---------- core math ----------
+  function calc(model, loadW, loadL){
+    var r = C[model];
+    var diffW = Math.max(0, loadW - r.w);
+    var diffL = Math.max(0, loadL - r.l);
+    return r.zones.map(function(z, i){
+      var left = z.l + diffW/2, right = z.r + diffW/2;
+      var front = z.f + diffL/2, back = z.b + diffL/2;
+      var oneLane = r.w + diffW + z.l + z.r;
+      var hw = Math.max(r.w/2 + left, r.w/2 + right);
+      var hl = Math.max(r.l/2 + front, r.l/2 + back);
+      return {
+        rotField: 2 * Math.hypot(hw, hl),
+        speed:i+1, front:front, back:back, left:left, right:right,
+        oneLane:oneLane, twoLane: oneLane * 2,
+        formula: fmt(r.w) + ' + ' + fmt(diffW) + ' + ' + fmt(z.l + z.r)
+      };
+    });
+  }
+
+  // ---------- calculator view ----------
+  function buildRobotSeg(){
+    var seg = $('robotSeg');
+    seg.innerHTML = '';
+    MODELS.forEach(function(m){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(m === state.model));
+      b.dataset.model = m;
+      b.innerHTML = m + '<small>' + fmt(C[m].w) + ' &times; ' + fmt(C[m].l) + '</small>';
+      seg.appendChild(b);
+    });
+  }
+
+  function renderCalc(){
+    var r = C[state.model];
+    var lw = num($('loadW').value), ll = num($('loadL').value);
+    var res = calc(state.model, lw, ll);
+    var diffW = Math.max(0, lw - r.w), diffL = Math.max(0, ll - r.l);
+
+    $('summary').innerHTML =
+      '<span>Rotation &empty; (speed 1 field) <b>' + fmt(res[0].rotField) + ' mm</b></span>' +
+      '<span>Robot <b>' + fmt(r.w) + ' &times; ' + fmt(r.l) + ' mm</b></span>' +
+      '<span>Width overhang <b>' + fmt(diffW) + ' mm</b></span>' +
+      '<span>Length overhang <b>' + fmt(diffL) + ' mm</b></span>';
+
+    $('speeds').innerHTML = res.map(function(x){
+      return '<div class="speed-card">' +
+        '<h3>Speed ' + x.speed + '</h3>' +
+        '<div class="lane one"><div class="k">1 lane</div><div class="v">' + fmt(x.oneLane) + '<small>mm</small></div>' +
+          '<div class="f">' + x.formula + '</div></div>' +
+        '<div class="lane two"><div class="k">2 lane</div><div class="v">' + fmt(x.twoLane) + '<small>mm</small></div>' +
+          '<div class="f">2 &times; ' + fmt(x.oneLane) + '</div></div>' +
+      '</div>';
+    }).join('');
+
+    var z = r.zones;
+    $('fieldRows').innerHTML = res.map(function(x, i){
+      function cell(total, base){
+        var add = total - base;
+        return fmt(total) + (add > 0 ? ' <span class="add" style="color:var(--teal)">(+' + fmt(add) + ')</span>' : '');
+      }
+      return '<tr><td class="zone-label">Speed ' + x.speed + '</td>' +
+        '<td>' + cell(x.front, z[i].f) + '</td>' +
+        '<td>' + cell(x.back, z[i].b) + '</td>' +
+        '<td>' + cell(x.left, z[i].l) + '</td>' +
+        '<td>' + cell(x.right, z[i].r) + '</td></tr>';
+    }).join('');
+
+  }
+
+  // ---------- constants view ----------
+  function buildConst(){
+    var html = '';
+    MODELS.forEach(function(m){
+      var r = C[m];
+      html += '<div class="robot-card"><h3>' + m + '</h3>' +
+        '<div class="size-row">' +
+          '<div class="field"><label for="c_' + m + '_w">Robot width</label><div class="numin"><input type="number" id="c_' + m + '_w" data-m="' + m + '" data-k="w" value="' + r.w + '" step="10"><span class="unit">mm</span></div></div>' +
+          '<div class="field"><label for="c_' + m + '_l">Robot length</label><div class="numin"><input type="number" id="c_' + m + '_l" data-m="' + m + '" data-k="l" value="' + r.l + '" step="10"><span class="unit">mm</span></div></div>' +
+        '</div>' +
+        '<div class="tbl-wrap"><table><thead><tr><th>Forward speed</th>' +
+        SIDES.map(function(s){ return '<th>' + s[1] + ' safety</th>'; }).join('') + '</tr></thead><tbody>';
+      for(var z=0; z<4; z++){
+        html += '<tr><td class="zone-label">Speed ' + (z+1) + '</td>' +
+          SIDES.map(function(s){
+            return '<td><input type="number" aria-label="' + m + ' speed ' + (z+1) + ' ' + s[1] + ' safety field" id="c_' + m + '_z' + z + '_' + s[0] + '" data-m="' + m + '" data-z="' + z + '" data-k="' + s[0] + '" value="' + r.zones[z][s[0]] + '" step="10"></td>';
+          }).join('') + '</tr>';
+      }
+      html += '</tbody></table></div></div>';
+    });
+    $('constCards').innerHTML = html;
+  }
+
+  function updateJson(){
+    $('jsonBox').value = JSON.stringify({models: C}, null, 2);
+  }
+
+  $('constCards').addEventListener('input', function(e){
+    var t = e.target;
+    if(!t.dataset || !t.dataset.m) return;
+    var v = num(t.value);
+    if(t.dataset.z !== undefined){ C[t.dataset.m].zones[+t.dataset.z][t.dataset.k] = v; }
+    else { C[t.dataset.m][t.dataset.k] = v; }
+    saveStored();
+    updateJson();
+    buildRobotSeg();
+    renderCalc();
+  });
+
+  var statusEl = $('jsonStatus');
+  function setStatus(msg, err){ statusEl.textContent = msg; statusEl.className = 'status' + (err ? ' err' : ''); }
+
+  $('copyBtn').addEventListener('click', function(){
+    var box = $('jsonBox');
+    function fallback(){ box.focus(); box.select(); setStatus('Press Ctrl+C to copy the selected text.', false); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(box.value).then(function(){ setStatus('Copied.', false); }, fallback);
+    } else { fallback(); }
+  });
+
+  $('loadBtn').addEventListener('click', function(){
+    try{
+      var s = sanitize(JSON.parse($('jsonBox').value));
+      if(!s){ setStatus('That JSON is missing a robot or its four speed zones.', true); return; }
+      C = s; saveStored();
+      buildConst(); buildRobotSeg(); renderCalc(); updateJson();
+      setStatus('Loaded.', false);
+    }catch(e){ setStatus('Could not read that as JSON.', true); }
+  });
+
+  var resetArmed = false, resetTimer = null;
+  $('resetBtn').addEventListener('click', function(){
+    var b = this;
+    if(!resetArmed){
+      resetArmed = true; b.textContent = 'Click again to reset'; b.classList.add('danger-armed');
+      resetTimer = setTimeout(function(){ resetArmed = false; b.textContent = 'Reset to defaults'; b.classList.remove('danger-armed'); }, 4000);
+      return;
+    }
+    clearTimeout(resetTimer); resetArmed = false;
+    b.textContent = 'Reset to defaults'; b.classList.remove('danger-armed');
+    C = defaults();
+    try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+    buildConst(); buildRobotSeg(); renderCalc(); updateJson();
+    setStatus('Reset to default values.', false);
+  });
+
+  // ---------- wiring ----------
+  $('robotSeg').addEventListener('click', function(e){
+    var b = e.target.closest('button');
+    if(!b) return;
+    state.model = b.dataset.model;
+    buildRobotSeg();
+    renderCalc();
+  });
+  $('loadW').addEventListener('input', renderCalc);
+  $('loadL').addEventListener('input', renderCalc);
+
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      var which = t.dataset.tab;
+      document.querySelectorAll('.tab').forEach(function(o){ o.setAttribute('aria-selected', String(o === t)); });
+      $('viewCalc').hidden = which !== 'calc';
+      $('viewConst').hidden = which !== 'const';
+    });
+  });
+
+  $('loadW').value = state.loadW;
+  $('loadL').value = state.loadL;
+  buildRobotSeg();
+  buildConst();
+  updateJson();
+  renderCalc();
+})();
+</script>
+
+</body></html>
